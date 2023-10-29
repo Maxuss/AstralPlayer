@@ -1,3 +1,11 @@
-fn main() {
-    println!("Hello, world!");
+use crate::api::start_axum;
+
+mod api;
+mod data;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    start_axum().await?;
+
+    Ok(())
 }
