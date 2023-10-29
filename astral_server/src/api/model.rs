@@ -1,5 +1,5 @@
-use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
-use serde::{Deserialize, Serialize};
+use chrono::{DateTime, NaiveDateTime, Utc};
+use serde::Serialize;
 use utoipa::{ToResponse, ToSchema};
 use uuid::Uuid;
 
@@ -51,6 +51,9 @@ pub struct FullAlbumMetadata {
     /// UTC release date of this album
     #[schema(example = example_date)]
     pub release_date: DateTime<Utc>,
+    /// Top 3 most prominent genres in this album.
+    #[schema(example = example_genres)]
+    pub genres: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, ToSchema)]
@@ -65,7 +68,7 @@ pub struct FullArtistMetadata {
     /// You can do a GET request to `/stats/artist/{id}/genres` to get all genres and their statistics.
     #[schema(example = example_genres)]
     pub genres: Vec<String>,
-    /// String containing description for this artist
+    /// String containing description for this artist. Can contain markdown.
     pub about_artist: String,
 }
 
@@ -126,6 +129,9 @@ pub struct MinifiedAlbumMetadata {
     /// UTC release date of this album
     #[schema(example = example_date)]
     pub release_date: DateTime<Utc>,
+    /// Most prominent genres in this album.
+    #[schema(example = example_genres)]
+    pub genres: Vec<String>,
 }
 
 /// Essential, but minified artist metadata

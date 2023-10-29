@@ -1,7 +1,7 @@
 use crate::api::start_axum;
 
 mod api;
-mod data;
+pub mod data;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
