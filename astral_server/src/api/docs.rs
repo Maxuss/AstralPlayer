@@ -2,11 +2,12 @@ use utoipa::OpenApi;
 
 use super::model::*;
 use super::paths::metadata::*;
+use crate::err::AstralError;
 
 #[derive(OpenApi)]
 #[openapi(
     components(
-        responses(TrackMetadataResponse, ArtistMetadataResponse, AlbumMetadataResponse),
+        responses(TrackMetadataResponse, ArtistMetadataResponse, AlbumMetadataResponse, AstralError),
         schemas(FullTrackMetadata, FullArtistMetadata, FullAlbumMetadata, MinifiedTrackMetadata, MinifiedAlbumMetadata, MinifiedArtistMetadata)
     ),
     paths(

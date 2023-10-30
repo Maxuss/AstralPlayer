@@ -1,5 +1,6 @@
 use axum::Json;
 use crate::api::model::{TrackMetadataResponse, AlbumMetadataResponse, ArtistMetadataResponse};
+use crate::err::AstralError;
 
 /// Gets full metadata of a single track
 #[axum_macros::debug_handler]
@@ -27,7 +28,8 @@ pub async fn get_track_metadata() -> Json<TrackMetadataResponse> {
         ("id" = Uuid, Path, description = "UUID of the artist")
     ),
     responses(
-        (status = 200, response = ArtistMetadataResponse)
+        (status = 200, response = ArtistMetadataResponse),
+        (status = 400, response = AstralError)
     ),
     tag = "metadata"
 )]
