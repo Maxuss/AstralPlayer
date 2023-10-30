@@ -17,5 +17,5 @@ pub async fn register_with_token(
     State(db): State<AstralDatabase>,
     Json(req): Json<RegisterRequest>
 ) -> Res<AuthenticationResponse> {
-
+    todo!()
 }

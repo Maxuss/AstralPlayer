@@ -22,7 +22,7 @@ use crate::err::AstralError;
     ),
     tags(
         (name = "metadata", description = "Operations related to getting or updating metadata"),
-        (name = "auth", descriptiption = "Operations related to authentication, authorization and account creation")
+        (name = "auth", description = "Operations related to authentication, authorization and account creation")
     )
 )]
 pub struct ApiDoc;

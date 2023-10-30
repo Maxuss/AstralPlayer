@@ -5,7 +5,7 @@ use serde::ser::SerializeStruct;
 use serde_json::json;
 use thiserror::Error;
 use utoipa::openapi::{ContentBuilder, ObjectBuilder, RefOr, ResponseBuilder, SchemaType};
-use utoipa::{ToResponse, ToSchema};
+use utoipa::ToResponse;
 
 /// The error container
 #[derive(Debug, Error)]

@@ -43,7 +43,7 @@ pub struct AlbumMetadataResponse {
 //#region Auth
 
 /// Authenticated successfully
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, ToResponse)]
 pub struct AuthenticationResponse {
     /// Whether authentication was successful (always true)
     pub success: bool,
@@ -52,7 +52,7 @@ pub struct AuthenticationResponse {
 }
 
 /// Checks if the invite code is valid
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, ToResponse)]
 pub struct InviteCodeCheckResponse {
     /// Whether the invite code is valid
     pub is_valid: bool
