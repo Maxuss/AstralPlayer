@@ -14,7 +14,8 @@ use crate::err::AstralError;
         get_track_metadata, get_artist_metadata, get_album_metadata
     ),
     tags(
-        (name = "metadata", description = "Operations related to getting or updating metadata")
+        (name = "metadata", description = "Operations related to getting or updating metadata"),
+        (name = "auth", descriptiption = "Operations related to authentication, authorization and account creation")
     )
 )]
 pub struct ApiDoc;

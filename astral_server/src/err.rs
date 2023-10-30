@@ -1,12 +1,11 @@
-use std::collections::BTreeMap;
 use axum::Json;
 use axum::response::{IntoResponse, Response};
 use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
-use serde_json::{json, Value};
+use serde_json::json;
 use thiserror::Error;
-use utoipa::openapi::{Components, ComponentsBuilder, ContentBuilder, Object, ObjectBuilder, Ref, RefOr, ResponseBuilder, ResponsesBuilder, SchemaType};
-use utoipa::{IntoResponses, ToResponse, ToSchema};
+use utoipa::openapi::{ContentBuilder, ObjectBuilder, RefOr, ResponseBuilder, SchemaType};
+use utoipa::{ToResponse, ToSchema};
 
 /// The error container
 #[derive(Debug, Error)]
@@ -14,6 +13,9 @@ pub enum AstralError {
     /// Anyhow-provoked error
     #[error("{0}")]
     Unknown(#[from] anyhow::Error),
+    /// Mongo-provoked error
+    #[error("An error with DB has occurred: {0}")]
+    Database(#[from] mongodb::error::Error)
 }
 
 // <editor-fold defaultstate="collapsed" desc="impl macro">
@@ -66,7 +68,9 @@ macro_rules! error_impls {
 }
 // </editor-fold>
 
-
 error_impls! {
     Unknown: (INTERNAL_SERVER_ERROR, "unknown");
+    Database: (INTERNAL_SERVER_ERROR, "database");
 }
+
+pub type Res<T> = axum::response::Result<T, AstralError>;

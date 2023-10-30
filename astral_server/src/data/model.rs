@@ -47,9 +47,33 @@ pub struct AlbumMetadata {
     pub artists: Vec<Uuid>,
     /// Tracks within this album
     pub tracks: Vec<Uuid>,
-    /// Milliseconds unix timestamp of the release date
+    /// Milliseconds unix timestamp for the release date
     pub release_date: u64,
     /// Most prominent genres for this album.
     // fetch from last.fm?
     pub genres: Vec<String>,
+}
+
+/// A single user account
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserAccount {
+    /// UUID of this user
+    pub user_id: Uuid,
+    /// Username of this user
+    pub username: String,
+    /// Argon2 password hash
+    pub password_hash: String,
+    /// Milliseconds unix timestamp for the register date
+    pub register_date: u64,
+}
+
+/// A single invite code record
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InviteCode {
+    /// The actual code
+    pub code: String,
+    /// UUID of the user who issued this invite code
+    pub issued_by: Uuid,
+    /// Unix timestamp for when this invite code expires
+    pub expires_at: u64,
 }

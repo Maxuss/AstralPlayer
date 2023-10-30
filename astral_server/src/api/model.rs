@@ -1,9 +1,11 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use utoipa::{ToResponse, ToSchema};
 use uuid::Uuid;
 
 //#region Responses
+
+//#region Metadata
 
 /// Aggregated response for *metadata* of a single track.
 #[derive(Debug, Clone, Serialize, ToResponse)]
@@ -34,6 +36,57 @@ pub struct AlbumMetadataResponse {
     pub album_id: Uuid,
     /// The contained metadata
     pub metadata: FullAlbumMetadata
+}
+
+//#endregion
+
+//#region Auth
+
+/// Authenticated successfully
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct AuthenticationResponse {
+    /// Whether authentication was successful (always true)
+    pub success: bool,
+    /// JWT refresh token (valid for 30 days)
+    pub refresh_token: String,
+}
+
+/// Checks if the invite code is valid
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct InviteCodeCheckResponse {
+    /// Whether the invite code is valid
+    pub is_valid: bool
+}
+
+//#endregion
+
+//#endregion
+
+//#region Requests
+
+/// An attempt to login into account
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct AuthenticationRequest {
+    /// Username of the user to authenticate into
+    #[schema(example = "maxus")]
+    pub username: String,
+    /// Password to authenticate with
+    #[schema(example = "**********")]
+    pub password: String,
+}
+
+/// An attempt to create an account with invite code
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct RegisterRequest {
+    /// Username for the account
+    #[schema(example = "maxus")]
+    pub username: String,
+    /// Password for the account
+    #[schema(example = "**********")]
+    pub password: String,
+    /// A required invite code to register
+    #[schema(example = "A53gBf7A")]
+    pub invite_code: String,
 }
 
 //#endregion
