@@ -7,8 +7,15 @@ use crate::err::AstralError;
 #[derive(OpenApi)]
 #[openapi(
     components(
-        responses(TrackMetadataResponse, ArtistMetadataResponse, AlbumMetadataResponse, AstralError),
-        schemas(FullTrackMetadata, FullArtistMetadata, FullAlbumMetadata, MinifiedTrackMetadata, MinifiedAlbumMetadata, MinifiedArtistMetadata)
+        responses(
+            TrackMetadataResponse, ArtistMetadataResponse, AlbumMetadataResponse,
+            AuthenticationResponse, InviteCodeCheckResponse,
+            AstralError,
+        ),
+        schemas(
+            FullTrackMetadata, FullArtistMetadata, FullAlbumMetadata, MinifiedTrackMetadata, MinifiedAlbumMetadata, MinifiedArtistMetadata,
+            AuthenticationRequest, RegisterRequest
+        )
     ),
     paths(
         get_track_metadata, get_artist_metadata, get_album_metadata
