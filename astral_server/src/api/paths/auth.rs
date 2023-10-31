@@ -3,12 +3,11 @@ use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use axum::extract::State;
 use axum::Json;
-use chrono::{NaiveDateTime, Utc};
+use chrono::Utc;
 use mongodb::bson::doc;
 use crate::api::AppState;
 use crate::api::extensions::create_user_refresh_key;
 use crate::api::model::{AuthenticationResponse, RegisterRequest};
-use crate::data::AstralDatabase;
 use crate::data::model::{BsonId, UserAccount};
 use crate::err::AstralError;
 use crate::Res;
@@ -18,7 +17,7 @@ use crate::Res;
     path = "/auth/register",
     request_body = RegisterRequest,
     responses(
-        (status = 400, response = crate::err::AstralError),
+        (status = 400, response = AstralError),
         (status = 200, response = AuthenticationResponse)
     )
 )]

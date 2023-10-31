@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::api::AppState;
-use crate::data::model::{BsonId, UserAccount};
+use crate::data::model::UserAccount;
 use crate::err::AstralError;
 
 
