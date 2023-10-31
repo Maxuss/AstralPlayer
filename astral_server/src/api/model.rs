@@ -47,8 +47,10 @@ pub struct AlbumMetadataResponse {
 pub struct AuthenticationResponse {
     /// Whether authentication was successful (always true)
     pub success: bool,
-    /// JWT refresh token (valid for 30 days)
+    /// PASETO refresh token (valid for 30 days)
     pub refresh_token: String,
+    /// UUID of the user this user was invited by
+    pub invited_by: Uuid
 }
 
 /// Checks if the invite code is valid

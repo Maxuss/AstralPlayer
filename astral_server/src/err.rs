@@ -15,7 +15,11 @@ pub enum AstralError {
     Unknown(#[from] anyhow::Error),
     /// Mongo-provoked error
     #[error("An error with DB has occurred: {0}")]
-    Database(#[from] mongodb::error::Error)
+    Database(#[from] mongodb::error::Error),
+    #[error("Invalid request: {0}")]
+    BadRequest(String),
+    #[error("You are unauthorized to access this endpoint: {0}")]
+    Unauthorized(String),
 }
 
 // <editor-fold defaultstate="collapsed" desc="impl macro">
@@ -71,6 +75,8 @@ macro_rules! error_impls {
 error_impls! {
     Unknown: (INTERNAL_SERVER_ERROR, "unknown");
     Database: (INTERNAL_SERVER_ERROR, "database");
+    BadRequest: (BAD_REQUEST, "bad_request");
+    Unauthorized: (UNAUTHORIZED, "unauthorized");
 }
 
 pub type Res<T> = axum::response::Result<T, AstralError>;

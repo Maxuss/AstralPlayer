@@ -2,6 +2,7 @@ use utoipa::OpenApi;
 
 use super::model::*;
 use super::paths::metadata::*;
+use super::paths::auth::*;
 use crate::err::AstralError;
 
 #[derive(OpenApi)]
@@ -18,7 +19,8 @@ use crate::err::AstralError;
         )
     ),
     paths(
-        get_track_metadata, get_artist_metadata, get_album_metadata
+        get_track_metadata, get_artist_metadata, get_album_metadata,
+        register_with_token
     ),
     tags(
         (name = "metadata", description = "Operations related to getting or updating metadata"),
