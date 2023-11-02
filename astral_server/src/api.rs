@@ -9,11 +9,10 @@ use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::api::docs::ApiDoc;
-use crate::api::extensions::{try_obtain_paseto_secret, UserPermission};
+use crate::api::extensions::try_obtain_paseto_secret;
 use crate::data::AstralDatabase;
 
 use paths::*;
-use crate::data::model::{BsonId, InviteCode};
 
 /// Contains model definition of requests and response objects
 pub mod model;
@@ -21,22 +20,19 @@ mod docs;
 pub mod paths;
 pub mod extensions;
 
+/// Shared app state
 #[derive(Clone)]
 pub struct AppState {
+    /// Paseto symmetric secret key
     pub paseto_key: SymmetricKey<V4>,
+    /// Database access
     pub db: AstralDatabase,
 }
 
+/// Starts the axum server
 pub async fn start_axum() -> anyhow::Result<()> {
     let paseto_key = try_obtain_paseto_secret()?;
     let db = AstralDatabase::connect(env::var("MONGODB_URI")?).await?;
-
-    db.invite_codes.insert_one(InviteCode {
-        code: String::from("AAAAAAAA"),
-        issued_by: BsonId::new(),
-        expires_at: 1730365097000,
-        permissions: vec![UserPermission::ChangeMetadata, UserPermission::InviteUsers, UserPermission::UploadTracks]
-    }, None).await?;
 
     let state = AppState {
         paseto_key,

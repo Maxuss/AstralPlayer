@@ -21,7 +21,8 @@ use crate::api::AppState;
 use crate::data::model::UserAccount;
 use crate::err::AstralError;
 
-
+/// Attempts to obtain PASETO secret symmetric key from local file.
+// (maybe insecure?)
 pub fn try_obtain_paseto_secret() -> anyhow::Result<SymmetricKey<V4>> {
     let path = Path::new(".paseto");
     if !path.exists() {
@@ -39,11 +40,15 @@ pub fn try_obtain_paseto_secret() -> anyhow::Result<SymmetricKey<V4>> {
     SymmetricKey::<V4>::from(&bytes).map_err(anyhow::Error::from)
 }
 
+/// A single permission for a user
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum UserPermission {
+    /// Allows user to upload new tracks to the servers
     UploadTracks,
+    /// Allows user to change track/album/artist metadata
     ChangeMetadata,
+    /// Allows user to invite user and assign them permissions that they have
     InviteUsers,
 }
 
@@ -66,6 +71,7 @@ pub fn create_user_refresh_key(sk: &SymmetricKey<V4>, uid: Uuid) -> anyhow::Resu
     Ok(token)
 }
 
+/// Validates refresh token specifically
 pub fn validate_key(sk: &SymmetricKey<V4>, key: &str) -> anyhow::Result<Uuid> {
     let validation_rules = ClaimsValidationRules::new();
     let untrusted = UntrustedToken::<Local, V4>::try_from(key)?;
@@ -75,6 +81,7 @@ pub fn validate_key(sk: &SymmetricKey<V4>, key: &str) -> anyhow::Result<Uuid> {
     Ok(uid)
 }
 
+/// Validates access token specifically
 pub fn validate_access_key(sk: &SymmetricKey<V4>, key: &str) -> anyhow::Result<Uuid> {
     let mut validation_rules = ClaimsValidationRules::new();
     validation_rules.validate_subject_with("Astral-Access");
@@ -85,6 +92,7 @@ pub fn validate_access_key(sk: &SymmetricKey<V4>, key: &str) -> anyhow::Result<U
     Ok(uid)
 }
 
+/// Extension used to validate that user is authenticated
 #[derive(Debug, Clone)]
 pub struct AuthenticatedUser(pub UserAccount);
 

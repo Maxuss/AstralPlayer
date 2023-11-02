@@ -1,14 +1,14 @@
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
-use axum::extract::{Path, State};
+use axum::extract::State;
 use axum::headers::Authorization;
 use axum::headers::authorization::Bearer;
 use axum::{Json, TypedHeader};
 use chrono::Utc;
 use mongodb::bson::doc;
 use crate::api::AppState;
-use crate::api::extensions::{AuthenticatedUser, create_user_access_key, create_user_refresh_key, validate_key};
+use crate::api::extensions::{create_user_access_key, create_user_refresh_key, validate_key};
 use crate::api::model::{AuthenticationRequest, AuthenticationResponse, RegisterRequest};
 use crate::data::model::{BsonId, UserAccount};
 use crate::err::AstralError;
@@ -100,7 +100,7 @@ pub async fn obtain_access_token(
     Ok(create_user_access_key(&paseto_key, uid)?)
 }
 
-/// Hashes password
+/// Hashes password with Argon2
 pub fn hash_password(password: String) -> String {
     let argon2 = Argon2::default();
     let salt = SaltString::generate(&mut OsRng);

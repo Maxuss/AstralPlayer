@@ -16,8 +16,10 @@ pub enum AstralError {
     /// Mongo-provoked error
     #[error("An error with DB has occurred: {0}")]
     Database(#[from] mongodb::error::Error),
+    /// Bad client reuqest
     #[error("Invalid request: {0}")]
     BadRequest(String),
+    /// Client is not authorized to access this endpoint
     #[error("You are unauthorized to access this endpoint: {0}")]
     Unauthorized(String),
 }
