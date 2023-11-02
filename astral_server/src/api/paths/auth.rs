@@ -100,14 +100,6 @@ pub async fn obtain_access_token(
     Ok(create_user_access_key(&paseto_key, uid)?)
 }
 
-pub async fn test_auth(
-    State(_): State<AppState>,
-    AuthenticatedUser(auth): AuthenticatedUser
-) -> String {
-    println!("{auth:#?}");
-    "hhhh".into()
-}
-
 /// Hashes password
 pub fn hash_password(password: String) -> String {
     let argon2 = Argon2::default();

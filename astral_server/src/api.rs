@@ -50,7 +50,6 @@ pub async fn start_axum() -> anyhow::Result<()> {
         .route("/auth/register", post(auth::register_with_token))
         .route("/auth/login", post(auth::login))
         .route("/auth/token", get(auth::obtain_access_token))
-        .route("/auth/test", get(auth::test_auth))
         .with_state(state);
 
     let address = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 8080));
