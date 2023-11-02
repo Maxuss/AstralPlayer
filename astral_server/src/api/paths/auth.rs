@@ -22,7 +22,8 @@ use crate::Res;
     responses(
         (status = 400, response = AstralError),
         (status = 200, response = AuthenticationResponse)
-    )
+    ),
+    tag = "auth"
 )]
 #[axum_macros::debug_handler]
 pub async fn register_with_token(
@@ -64,7 +65,8 @@ pub async fn register_with_token(
     responses(
         (status = 400, response = AstralError),
         (status = 200, body = String, description = "Successfully obtained refresh token")
-    )
+    ),
+    tag = "auth"
 )]
 #[axum_macros::debug_handler]
 pub async fn login(
@@ -89,7 +91,8 @@ pub async fn login(
     responses(
         (status = 400, response = AstralError),
         (status = 200, body = String, description = "Successfully obtained access token")
-    )
+    ),
+    tag = "auth"
 )]
 #[axum_macros::debug_handler]
 pub async fn obtain_access_token(
