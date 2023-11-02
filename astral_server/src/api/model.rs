@@ -45,8 +45,6 @@ pub struct AlbumMetadataResponse {
 /// Authenticated successfully
 #[derive(Debug, Clone, Serialize, ToResponse)]
 pub struct AuthenticationResponse {
-    /// Whether authentication was successful (always true)
-    pub success: bool,
     /// PASETO refresh token (valid for 30 days)
     pub refresh_token: String,
     /// UUID of the user this user was invited by

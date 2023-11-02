@@ -2,7 +2,7 @@ use std::env;
 use std::net::{Ipv4Addr, SocketAddr};
 
 use axum::{Router, Server};
-use axum::routing::post;
+use axum::routing::{get, post};
 use pasetors::keys::SymmetricKey;
 use pasetors::version4::V4;
 use utoipa::OpenApi;
@@ -48,6 +48,9 @@ pub async fn start_axum() -> anyhow::Result<()> {
 
         // auth
         .route("/auth/register", post(auth::register_with_token))
+        .route("/auth/login", post(auth::login))
+        .route("/auth/token", get(auth::obtain_access_token))
+        .route("/auth/test", get(auth::test_auth))
         .with_state(state);
 
     let address = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 8080));

@@ -47,14 +47,17 @@ pub enum UserPermission {
     InviteUsers,
 }
 
+/// Creates a short-lived PASETO access token
 pub fn create_user_access_key(sk: &SymmetricKey<V4>, uid: Uuid) -> anyhow::Result<String> {
     let mut claims = Claims::new()?;
     claims.add_additional("uid", uid.to_string())?;
+    claims.subject("Astral-Access")?;
 
     let token = local::encrypt(sk, &claims, None, None)?;
     Ok(token)
 }
 
+/// Creates a long-lived PASETO refresh token that can be used to obtain an access token
 pub fn create_user_refresh_key(sk: &SymmetricKey<V4>, uid: Uuid) -> anyhow::Result<String> {
     let mut claims = Claims::new_expires_in(&Duration::from_secs(30 * 86400u64))?;
     claims.add_additional("uid", uid.to_string())?;
@@ -72,8 +75,18 @@ pub fn validate_key(sk: &SymmetricKey<V4>, key: &str) -> anyhow::Result<Uuid> {
     Ok(uid)
 }
 
+pub fn validate_access_key(sk: &SymmetricKey<V4>, key: &str) -> anyhow::Result<Uuid> {
+    let mut validation_rules = ClaimsValidationRules::new();
+    validation_rules.validate_subject_with("Astral-Access");
+    let untrusted = UntrustedToken::<Local, V4>::try_from(key)?;
+    let trusted = local::decrypt(sk, &untrusted, &validation_rules, None, None)?;
+
+    let uid = Uuid::from_str(trusted.payload_claims().unwrap().get_claim("uid").unwrap().as_str().unwrap())?;
+    Ok(uid)
+}
+
 #[derive(Debug, Clone)]
-pub struct AuthenticatedUser(UserAccount);
+pub struct AuthenticatedUser(pub UserAccount);
 
 #[axum::async_trait]
 impl FromRequestParts<AppState> for AuthenticatedUser {
@@ -85,7 +98,7 @@ impl FromRequestParts<AppState> for AuthenticatedUser {
         let bearer = Bearer::decode(auth)
             .ok_or_else(|| AstralError::BadRequest(String::from("Expected bearer authorization for this endpoint")))?;
         let token = bearer.token();
-        let uid = validate_key(&state.paseto_key, token)
+        let uid = validate_access_key(&state.paseto_key, token)
             .map_err(|_| AstralError::Unauthorized(String::from("Invalid access token")))?;
         let user = state.db.accounts.find_one(doc! { "user_id": uid }, None).await?
             .ok_or_else(|| AstralError::Unauthorized(String::from("Couldn't find a user with UUID {uid}. Invalid access token?")))?;
