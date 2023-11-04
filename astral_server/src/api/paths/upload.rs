@@ -1,9 +1,8 @@
 use axum::extract::{BodyStream, Path, State};
-use axum::{Json, TypedHeader};
+use axum::Json;
 use futures_util::{AsyncWriteExt, StreamExt};
 use mongodb::bson::doc;
 use sha2::{Digest, Sha256};
-use sha2::digest::FixedOutput;
 use crate::api::AppState;
 use crate::api::extensions::{AuthenticatedUser, UserPermission};
 use crate::api::model::UploadTrackResponse;
@@ -11,6 +10,20 @@ use crate::data::model::{BsonId, TrackFormat, UndefinedTrack};
 use crate::err::AstralError;
 use crate::Res;
 
+/// Uploads a track to the servers with zero metadata assigned. Returned UUID can be used to update metadata.
+#[utoipa::path(
+    post,
+    path = "/upload/track/{format}",
+    request_body = BinaryFileUpload,
+    responses(
+        (status = 400, response = AstralError),
+        (status = 200, response = UploadTrackResponse)
+    ),
+    params(
+        ("format" = TrackFormat, Path, description = "Track format. Supported formats are: flac, m4a, mp3"),
+    ),
+    tag = "upload"
+)]
 pub async fn upload_track(
     State(AppState { db, .. }): State<AppState>,
     Path(hint): Path<String>,

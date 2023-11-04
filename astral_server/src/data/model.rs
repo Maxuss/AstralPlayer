@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use uuid::Uuid;
 use crate::api::extensions::UserPermission;
 
@@ -86,7 +87,7 @@ pub struct InviteCode {
 }
 
 /// Type of a track format. Other track formats are currently unsupported
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum TrackFormat {
     Flac,

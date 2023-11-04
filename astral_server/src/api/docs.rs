@@ -1,8 +1,10 @@
-use utoipa::OpenApi;
+use utoipa::{OpenApi, ToSchema};
 
 use super::model::*;
+use crate::data::model::*;
 use super::paths::metadata::*;
 use super::paths::auth::*;
+use super::paths::upload::*;
 use crate::err::AstralError;
 
 #[derive(OpenApi)]
@@ -16,12 +18,14 @@ use crate::err::AstralError;
         ),
         schemas(
             FullTrackMetadata, FullArtistMetadata, FullAlbumMetadata, MinifiedTrackMetadata, MinifiedAlbumMetadata, MinifiedArtistMetadata,
-            AuthenticationRequest, RegisterRequest
+            AuthenticationRequest, RegisterRequest,
+            TrackFormat, BinaryFileUpload
         )
     ),
     paths(
         get_track_metadata, get_artist_metadata, get_album_metadata,
-        register_with_token, login, obtain_access_token
+        register_with_token, login, obtain_access_token,
+        upload_track
     ),
     tags(
         (name = "metadata", description = "Operations related to reading metadata"),
@@ -30,3 +34,7 @@ use crate::err::AstralError;
     )
 )]
 pub struct ApiDoc;
+
+#[derive(ToSchema)]
+#[schema(format = Binary)]
+pub struct BinaryFileUpload(Vec<u8>);
