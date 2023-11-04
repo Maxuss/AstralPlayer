@@ -3,6 +3,7 @@ use crate::api::start_axum;
 mod api;
 pub mod data;
 pub mod err;
+pub mod metadata;
 
 pub use err::Res;
 

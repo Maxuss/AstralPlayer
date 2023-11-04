@@ -24,7 +24,17 @@ pub enum AstralError {
     Unauthorized(String),
     /// IO error. Most likely related to streaming
     #[error("An error has occurred within the IO: {0}")]
-    IOError(#[from] std::io::Error)
+    IOError(#[from] std::io::Error),
+
+    /// Metaflac error
+    #[error("An error has occurred when reading Flac metadata: {0}")]
+    FlacError(#[from] metaflac::Error),
+    /// ID3 error
+    #[error("An error has occurred when reading Mp3 (id3) metadata: {0}")]
+    Id3Error(#[from] id3::Error),
+    /// Mp4ameta error
+    #[error("An error has occurred when reading M4A metadata: {0}")]
+    M4aError(#[from] mp4ameta::Error)
 }
 
 // <editor-fold defaultstate="collapsed" desc="impl macro">
@@ -83,6 +93,10 @@ error_impls! {
     BadRequest: (BAD_REQUEST, "bad_request");
     Unauthorized: (UNAUTHORIZED, "unauthorized");
     IOError: (INTERNAL_SERVER_ERROR, "io");
+
+    FlacError: (INTERNAL_SERVER_ERROR, "flac");
+    Id3Error: (INTERNAL_SERVER_ERROR, "id3");
+    M4aError: (INTERNAL_SERVER_ERROR, "m4a");
 }
 
 pub type Res<T> = axum::response::Result<T, AstralError>;

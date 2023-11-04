@@ -1,13 +1,17 @@
 use axum::extract::{BodyStream, Path, State};
 use axum::Json;
-use futures_util::{AsyncWriteExt, StreamExt};
+use futures_util::{AsyncReadExt, AsyncWriteExt, StreamExt};
 use mongodb::bson::doc;
 use sha2::{Digest, Sha256};
+use uuid::Uuid;
 use crate::api::AppState;
 use crate::api::extensions::{AuthenticatedUser, UserPermission};
-use crate::api::model::UploadTrackResponse;
+use crate::api::model::{TrackMetadataResponse, UploadTrackResponse};
+use crate::api::paths::metadata::extract_track_metadata;
 use crate::data::model::{BsonId, TrackFormat, UndefinedTrack};
 use crate::err::AstralError;
+use crate::metadata::binary::extract_metadata_from_bytes;
+use crate::metadata::classify_insert_metadata;
 use crate::Res;
 
 /// Uploads a track to the servers with zero metadata assigned. Returned UUID can be used to update metadata.
@@ -75,5 +79,44 @@ pub async fn upload_track(
 
     Ok(Json(UploadTrackResponse {
         track_id: new_track.track_id.to_uuid_1()
+    }))
+}
+
+/// Attempts to guess track data from audio metadata
+#[utoipa::path(
+    post,
+    path = "/upload/guess_metadata/{uuid}",
+    responses(
+        (status = 400, response = AstralError),
+        (status = 200, body = TrackMetadataResponse, description = "Successfully guessed metadata from file. Use /metadata/track to view it.")
+    ),
+    params(
+        ("uuid" = Uuid, Path, description = "UUID of the track to use for metadata guessing"),
+    ),
+    tag = "upload"
+)]
+pub async fn guess_metadata(
+    State(AppState { db, .. }): State<AppState>,
+    Path(track_id): Path<Uuid>,
+    AuthenticatedUser(user): AuthenticatedUser,
+) -> Res<Json<TrackMetadataResponse>> {
+    let track = db.undefined_tracks.find_one_and_delete(doc! {"track_id": BsonId::from_uuid_1(track_id) }, None).await?
+        .ok_or_else(|| AstralError::BadRequest(String::from("Track with this UUID does not exist")))?;
+
+    let mut track_audio_bytes = vec![];
+    let mut stream = db.gridfs_tracks.open_download_stream_by_name(track.track_id.to_string(), None).await?;
+    stream.read_to_end(&mut track_audio_bytes).await?;
+    drop(stream);
+
+    let extracted = extract_metadata_from_bytes(&track_audio_bytes, track.format)?;
+    drop(track_audio_bytes);
+
+    let uid = classify_insert_metadata(&db, extracted).await?;
+
+    let metadata = extract_track_metadata(&db, uid.clone()).await?;
+
+    Ok(Json(TrackMetadataResponse {
+        track_id: uid.to_uuid_1(),
+        metadata
     }))
 }

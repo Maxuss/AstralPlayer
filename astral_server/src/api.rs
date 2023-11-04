@@ -43,6 +43,9 @@ pub async fn start_axum() -> anyhow::Result<()> {
     let router = Router::new()
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi())) // swagger
 
+        // metadata
+        .route("/metadata/track/:uuid", get(metadata::get_track_metadata))
+
         // auth
         .route("/auth/register", post(auth::register_with_token))
         .route("/auth/login", post(auth::login))
@@ -50,6 +53,7 @@ pub async fn start_axum() -> anyhow::Result<()> {
 
         // upload
         .route("/upload/track/:hint", post(upload::upload_track))
+        .route("/upload/guess_metadata/:uuid", post(upload::guess_metadata))
         .with_state(state);
 
     let address = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 8080));

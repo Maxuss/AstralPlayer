@@ -25,7 +25,7 @@ use crate::err::AstralError;
     paths(
         get_track_metadata, get_artist_metadata, get_album_metadata,
         register_with_token, login, obtain_access_token,
-        upload_track
+        upload_track, guess_metadata
     ),
     tags(
         (name = "metadata", description = "Operations related to reading metadata"),
