@@ -9,10 +9,11 @@ use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::api::docs::ApiDoc;
-use crate::api::extensions::try_obtain_paseto_secret;
+use crate::api::extensions::{try_obtain_paseto_secret, UserPermission};
 use crate::data::AstralDatabase;
 
 use paths::*;
+use crate::data::model::InviteCode;
 
 /// Contains model definition of requests and response objects
 pub mod model;
@@ -46,6 +47,9 @@ pub async fn start_axum() -> anyhow::Result<()> {
         .route("/auth/register", post(auth::register_with_token))
         .route("/auth/login", post(auth::login))
         .route("/auth/token", get(auth::obtain_access_token))
+
+        // upload
+        .route("/upload/track/:hint", post(upload::upload_track))
         .with_state(state);
 
     let address = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 8080));

@@ -1,5 +1,6 @@
-use mongodb::{Client, Collection, Database};
-use crate::data::model::{AlbumMetadata, ArtistMetadata, InviteCode, TrackMetadata, UserAccount};
+use mongodb::{Client, Collection, Database, GridFsBucket};
+use mongodb::options::GridFsBucketOptions;
+use crate::data::model::{AlbumMetadata, ArtistMetadata, InviteCode, TrackMetadata, UndefinedTrack, UserAccount};
 
 /// Contains all database models
 pub mod model;
@@ -17,6 +18,12 @@ pub struct AstralDatabase {
     pub accounts: Collection<UserAccount>,
     /// Invite codes used to register
     pub invite_codes: Collection<InviteCode>,
+    /// Undefined tracks
+    pub undefined_tracks: Collection<UndefinedTrack>,
+    /// GridFS bucket for all the tracks
+    pub gridfs_tracks: GridFsBucket,
+    /// GridFS bucket for all the album arts
+    pub gridfs_album_arts: GridFsBucket,
     /// Access to the inner database
     pub inner: Database
 }
@@ -31,13 +38,19 @@ impl AstralDatabase {
         let albums_metadata = inner.collection("albums_metadata");
         let accounts = inner.collection("accounts");
         let invite_codes = inner.collection("invite_codes");
+        let undefined_tracks = inner.collection("undefined_tracks");
+        let gridfs_tracks = inner.gridfs_bucket(GridFsBucketOptions::builder().bucket_name(String::from("tracks")).build());
+        let gridfs_album_arts = inner.gridfs_bucket(GridFsBucketOptions::builder().bucket_name(String::from("album_arts")).build());
         Ok(Self {
             inner,
             tracks_metadata,
             artists_metadata,
             albums_metadata,
             invite_codes,
-            accounts
+            undefined_tracks,
+            gridfs_tracks,
+            accounts,
+            gridfs_album_arts,
         })
     }
 }

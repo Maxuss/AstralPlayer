@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 use crate::api::extensions::UserPermission;
 
 pub type BsonId = mongodb::bson::Uuid;
@@ -82,4 +83,26 @@ pub struct InviteCode {
     pub expires_at: u64,
     /// Permissions that will be granted to this user on register
     pub permissions: Vec<UserPermission>
+}
+
+/// Type of a track format. Other track formats are currently unsupported
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TrackFormat {
+    Flac,
+    M4a,
+    Mp3
+}
+
+/// A single track without metadata assigned yet
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UndefinedTrack {
+    /// UUID of this track
+    pub track_id: BsonId,
+    /// Sha256 hash of the stored track
+    pub hash: String,
+    /// UUID of the user who uploaded this track
+    pub uploaded_by: BsonId,
+    /// Format of the track
+    pub format: TrackFormat
 }

@@ -11,10 +11,16 @@ argon2 = "0.5.2"
 axum = { version = "0.6.20", features = ["headers"] }
 axum-macros = "0.3.8"
 chrono = { version = "0.4.31", features = ["serde"] }
+futures-util = "0.3.29"
+hex = "0.4.3"
+id3 = { version = "1.9.0", features = ["tokio"] }
+metaflac = "0.2.5"
 mongodb = { version = "2.7.0", features = ["bson-chrono-0_4", "bson-uuid-1"] }
+mp4ameta = "0.11.0"
 pasetors = "0.6.7"
 serde = { version = "1.0.190", features = ["derive"] }
 serde_json = "1.0.107"
+sha2 = "0.10.8"
 thiserror = "1.0.50"
 tokio = { version = "1.33.0", features = ["macros", "rt-multi-thread"] }
 utoipa = { version = "4.0.0", features = ["uuid", "chrono"] }

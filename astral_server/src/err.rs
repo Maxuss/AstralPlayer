@@ -22,6 +22,9 @@ pub enum AstralError {
     /// Client is not authorized to access this endpoint
     #[error("You are unauthorized to access this endpoint: {0}")]
     Unauthorized(String),
+    /// IO error. Most likely related to streaming
+    #[error("An error has occurred within the IO: {0}")]
+    IOError(#[from] std::io::Error)
 }
 
 // <editor-fold defaultstate="collapsed" desc="impl macro">
@@ -79,6 +82,7 @@ error_impls! {
     Database: (INTERNAL_SERVER_ERROR, "database");
     BadRequest: (BAD_REQUEST, "bad_request");
     Unauthorized: (UNAUTHORIZED, "unauthorized");
+    IOError: (INTERNAL_SERVER_ERROR, "io");
 }
 
 pub type Res<T> = axum::response::Result<T, AstralError>;

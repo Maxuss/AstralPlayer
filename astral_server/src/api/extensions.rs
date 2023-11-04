@@ -41,7 +41,7 @@ pub fn try_obtain_paseto_secret() -> anyhow::Result<SymmetricKey<V4>> {
 }
 
 /// A single permission for a user
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum UserPermission {
     /// Allows user to upload new tracks to the servers

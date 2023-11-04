@@ -60,6 +60,17 @@ pub struct InviteCodeCheckResponse {
 
 //#endregion
 
+//#region Upload
+
+/// Successfully uploaded the track
+#[derive(Debug, Clone, Serialize, ToResponse)]
+pub struct UploadTrackResponse {
+    /// UUID of the track that can be used to upload metadata later
+    pub track_id: Uuid
+}
+
+//#endregion
+
 //#endregion
 
 //#region Requests

@@ -11,6 +11,7 @@ use crate::err::AstralError;
         responses(
             TrackMetadataResponse, ArtistMetadataResponse, AlbumMetadataResponse,
             AuthenticationResponse, InviteCodeCheckResponse,
+            UploadTrackResponse,
             AstralError,
         ),
         schemas(
@@ -23,8 +24,9 @@ use crate::err::AstralError;
         register_with_token, login, obtain_access_token
     ),
     tags(
-        (name = "metadata", description = "Operations related to getting or updating metadata"),
-        (name = "auth", description = "Operations related to authentication, authorization and account creation")
+        (name = "metadata", description = "Operations related to reading metadata"),
+        (name = "auth", description = "Operations related to authentication, authorization and account creation"),
+        (name = "upload", description = "Operations related to uploading tracks and their metadata")
     )
 )]
 pub struct ApiDoc;
