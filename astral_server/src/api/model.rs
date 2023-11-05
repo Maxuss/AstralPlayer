@@ -134,6 +134,8 @@ pub struct FullArtistMetadata {
     pub genres: Vec<String>,
     /// String containing description for this artist. Can contain markdown.
     pub about_artist: String,
+    /// All tracks by this artist
+    pub tracks: Vec<Uuid>
 }
 
 /// The full aggregated metadata of a track

@@ -15,7 +15,7 @@ use tokio_util::io::ReaderStream;
 use uuid::Uuid;
 use crate::api::AppState;
 use crate::api::extensions::AuthenticatedUser;
-use crate::api::model::{TrackMetadataResponse, AlbumMetadataResponse, ArtistMetadataResponse, FullTrackMetadata, MinifiedArtistMetadata, MinifiedAlbumMetadata};
+use crate::api::model::{TrackMetadataResponse, AlbumMetadataResponse, ArtistMetadataResponse, FullTrackMetadata, MinifiedArtistMetadata, MinifiedAlbumMetadata, MinifiedTrackMetadata, FullArtistMetadata};
 use crate::data::AstralDatabase;
 use crate::data::model::{AlbumMetadata, ArtistMetadata, BsonId, TrackMetadata};
 use crate::err::AstralError;
@@ -59,8 +59,26 @@ pub async fn get_track_metadata(
     ),
     tag = "metadata"
 )]
-pub async fn get_artist_metadata() -> Json<ArtistMetadataResponse> {
-    todo!()
+pub async fn get_artist_metadata(
+    State(AppState { db, .. }): State<AppState>,
+    Path(uuid): Path<Uuid>,
+    AuthenticatedUser(_): AuthenticatedUser
+) -> Res<Json<ArtistMetadataResponse>> {
+    let artist = db.artists_metadata.find_one(doc! { "artist_id": uuid }, None).await?
+        .ok_or_else(|| AstralError::NotFound(format!("Could not find artist with UUID: {uuid}")))?;
+    Ok(Json(
+        ArtistMetadataResponse {
+            artist_id: artist.artist_id.to_uuid_1(),
+            metadata: FullArtistMetadata {
+                artist_name: artist.name,
+                albums: extract_minified_albums(&db, artist.albums).await?,
+                genres: artist.genres.into_keys().collect(),
+                about_artist: artist.about,
+                tracks: artist.tracks.into_iter().map(BsonId::to_uuid_1).collect()
+            }
+        }
+    ))
+
 }
 
 /// Gets full metadata of a single album
@@ -162,23 +180,38 @@ pub async fn extract_track_metadata(db: &AstralDatabase, track_id: BsonId) -> Re
 }
 
 async fn extract_minified_artists(db: &AstralDatabase, artists: Vec<BsonId>) -> Res<Vec<MinifiedArtistMetadata>> {
-    let all = db.artists_metadata.find(doc! { "artist_id": { "$in": &artists } }, None).await?.map(|it| it.unwrap()).collect::<Vec<ArtistMetadata>>().await;
+    let all = db.artists_metadata.find(doc! { "artist_id": { "$in": &artists } }, None).await?
+        .map(|it| it.unwrap()).collect::<Vec<ArtistMetadata>>().await;
     Ok(all.into_iter().map(|each| MinifiedArtistMetadata {
         artist_id: each.artist_id.to_uuid_1(),
         artist_name: each.name.clone(),
-        album_ids: each.albums.into_iter().map(|other| other.to_uuid_1()).collect(),
+        album_ids: each.albums.into_iter().map(BsonId::to_uuid_1).collect(),
         genres: each.genres.into_keys().collect(),
     }).collect())
 }
 
 async fn extract_minified_albums(db: &AstralDatabase, albums: Vec<BsonId>) -> Res<Vec<MinifiedAlbumMetadata>> {
-    let all = db.albums_metadata.find(doc! { "album_id": { "$in": &albums } }, None).await?.map(|it| it.unwrap()).collect::<Vec<AlbumMetadata>>().await;
+    let all = db.albums_metadata.find(doc! { "album_id": { "$in": &albums } }, None).await?
+        .map(|it| it.unwrap()).collect::<Vec<AlbumMetadata>>().await;
     Ok(all.into_iter().map(|each| MinifiedAlbumMetadata {
         album_id: each.album_id.to_uuid_1(),
         album_name: each.name.clone(),
-        artist_ids: each.artists.into_iter().map(|other| other.to_uuid_1()).collect(),
-        track_ids: each.tracks.into_iter().map(|other| other.to_uuid_1()).collect(),
+        artist_ids: each.artists.into_iter().map(BsonId::to_uuid_1).collect(),
+        track_ids: each.tracks.into_iter().map(BsonId::to_uuid_1).collect(),
         genres: each.genres.clone(),
         release_date: NaiveDateTime::from_timestamp_millis(each.release_date as i64).unwrap().and_utc(),
+    }).collect())
+}
+
+async fn extract_minified_tracks(db: &AstralDatabase, tracks: Vec<BsonId>) -> Res<Vec<MinifiedTrackMetadata>> {
+    let all = db.tracks_metadata.find(doc! { "track_id": { "$in": &tracks } }, None).await?
+        .map(|it| it.unwrap()).collect::<Vec<TrackMetadata>>().await;
+    Ok(all.into_iter().map(|each| MinifiedTrackMetadata {
+        track_id: each.track_id.to_uuid_1(),
+        track_name: each.name,
+        track_length: each.length,
+        artist_ids: each.artists.into_iter().map(BsonId::to_uuid_1).collect(),
+        album_ids: each.albums.into_iter().map(BsonId::to_uuid_1).collect(),
+        is_explicit: each.is_explicit,
     }).collect())
 }
