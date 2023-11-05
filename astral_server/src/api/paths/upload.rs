@@ -6,7 +6,7 @@ use sha2::{Digest, Sha256};
 use uuid::Uuid;
 use crate::api::AppState;
 use crate::api::extensions::{AuthenticatedUser, UserPermission};
-use crate::api::model::{TrackMetadataResponse, UploadTrackResponse};
+use crate::api::model::{PatchTrackMetadata, TrackMetadataResponse, UploadTrackResponse};
 use crate::api::paths::metadata::extract_track_metadata;
 use crate::data::model::{BsonId, TrackFormat, UndefinedTrack};
 use crate::err::AstralError;
@@ -117,6 +117,53 @@ pub async fn guess_metadata(
 
     Ok(Json(TrackMetadataResponse {
         track_id: uid.to_uuid_1(),
+        metadata
+    }))
+}
+
+/// Updates metadata for a single track
+#[utoipa::path(
+    patch,
+    path = "/upload/track/{uuid}/patch",
+    request_body = PatchTrackMetadata,
+    responses(
+        (status = 400, response = AstralError),
+        (status = 200, body = TrackMetadataResponse, description = "Successfully patched track metadata")
+    ),
+    params(
+        ("uuid" = Uuid, Path, description = "UUID of the track to patch"),
+    ),
+    tag = "upload"
+)]
+pub async fn patch_track_metadata(
+    State(AppState { db, .. }): State<AppState>,
+    Path(track_id): Path<Uuid>,
+    AuthenticatedUser(user): AuthenticatedUser,
+    Json(PatchTrackMetadata { track_name, track_length, is_explicit, number, disc_number }): Json<PatchTrackMetadata>
+) -> Res<Json<TrackMetadataResponse>> {
+    let mut doc_object = doc!();
+    if let Some(track_name) = track_name {
+        doc_object.insert("name", track_name);
+    }
+    if let Some(length) = track_length {
+        doc_object.insert("length", track_length);
+    }
+    if let Some(is_explicit) = is_explicit {
+        doc_object.insert("is_explicit", is_explicit);
+    }
+    if let Some(number) = number {
+        doc_object.insert("number", number as i32);
+    }
+    if let Some(disc_number) = disc_number {
+        doc_object.insert("disc_number", disc_number as i32);
+    }
+    let uid = BsonId::from_uuid_1(track_id.clone());
+    db.tracks_metadata.update_one(doc! { "track_id": &uid }, doc! { "$set": doc_object }, None).await?;
+
+    let metadata = extract_track_metadata(&db, uid).await?;
+
+    Ok(Json(TrackMetadataResponse {
+        track_id,
         metadata
     }))
 }

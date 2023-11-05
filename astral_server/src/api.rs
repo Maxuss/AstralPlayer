@@ -2,7 +2,7 @@ use std::env;
 use std::net::{Ipv4Addr, SocketAddr};
 
 use axum::{Router, Server};
-use axum::routing::{get, post};
+use axum::routing::{get, patch, post};
 use pasetors::keys::SymmetricKey;
 use pasetors::version4::V4;
 use utoipa::OpenApi;
@@ -58,6 +58,7 @@ pub async fn start_axum() -> anyhow::Result<()> {
         // upload
         .route("/upload/track/:hint", post(upload::upload_track))
         .route("/upload/guess_metadata/:uuid", post(upload::guess_metadata))
+        .route("/upload/track/:uuid/patch", patch(upload::patch_track_metadata))
         .with_state(state);
 
     let address = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 8080));

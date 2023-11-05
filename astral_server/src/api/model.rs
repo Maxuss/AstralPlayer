@@ -101,6 +101,50 @@ pub struct RegisterRequest {
     pub invite_code: String,
 }
 
+/// Request to change assigned track metadata
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct PatchTrackMetadata {
+    /// New name of this track
+    #[schema(example = "AMPM Truck")]
+    pub track_name: Option<String>,
+    /// New length of this track in seconds
+    #[schema(example = 340)]
+    pub track_length: Option<u32>,
+    /// Whether this track contains explicit lyrics
+    pub is_explicit: Option<bool>,
+    /// Positional number of this track
+    pub number: Option<u16>,
+    /// Number of the disc this track is on
+    pub disc_number: Option<u16>,
+}
+
+/// Request to change assigned artist metadata
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct PatchArtistMetadata {
+    /// New name of the artist
+    #[schema(example = "The Garden")]
+    pub artist_name: Option<String>,
+    /// Albums by this artist
+    pub albums: Option<Vec<Uuid>>,
+    /// String containing description for this artist. Can contain markdown.
+    pub about_artist: Option<String>,
+}
+
+/// Request to change assigned artist metadata
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct PatchAlbumMetadata {
+    /// New name of this album
+    #[schema(example = "Kiss My Super Bowl Ring")]
+    pub album_name: Option<String>,
+    /// All tracks inside this album
+    pub tracks: Option<Vec<Uuid>>,
+    /// Unix timestamp in millis for the release date of this album
+    pub release_date: Option<u64>,
+    /// Most prominent genres in this album.
+    #[schema(example = example_genres)]
+    pub genres: Option<Vec<String>>,
+}
+
 //#endregion
 
 //#region Object parts
@@ -145,8 +189,8 @@ pub struct FullTrackMetadata {
     /// Name of this track
     #[schema(example = "AMPM Truck")]
     pub track_name: String,
-    /// Length of this track in milliseconds
-    #[schema(example = 340000)]
+    /// Length of this track in seconds
+    #[schema(example = 340)]
     pub track_length: u32,
     /// Minified metadata for artists who made this track
     pub artists: Vec<MinifiedArtistMetadata>,
@@ -171,8 +215,8 @@ pub struct MinifiedTrackMetadata {
     /// Name of this track
     #[schema(example = "AMPM Truck")]
     pub track_name: String,
-    /// Length of this track in milliseconds
-    #[schema(example = 340000)]
+    /// Length of this track in seconds
+    #[schema(example = 340)]
     pub track_length: u32,
     /// List of artist IDs who made this track
     #[schema(example = example_artist_ids)]
