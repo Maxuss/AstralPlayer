@@ -100,7 +100,7 @@ pub async fn upload_track(
 pub async fn guess_metadata(
     State(AppState { db, .. }): State<AppState>,
     Path(track_id): Path<Uuid>,
-    AuthenticatedUser(user): AuthenticatedUser,
+    AuthenticatedUser(_): AuthenticatedUser,
 ) -> Res<Json<TrackMetadataResponse>> {
     let track = db.undefined_tracks.find_one_and_delete(doc! {"track_id": BsonId::from_uuid_1(track_id) }, None).await?
         .ok_or_else(|| AstralError::BadRequest(String::from("Track with this UUID does not exist")))?;
@@ -152,7 +152,7 @@ pub async fn patch_track_metadata(
         doc_object.insert("name", track_name);
     }
     if let Some(length) = track_length {
-        doc_object.insert("length", track_length);
+        doc_object.insert("length", length);
     }
     if let Some(is_explicit) = is_explicit {
         doc_object.insert("is_explicit", is_explicit);
