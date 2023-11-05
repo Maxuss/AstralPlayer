@@ -1,3 +1,5 @@
+use std::collections::hash_map::RandomState;
+use std::collections::HashSet;
 use axum::extract::{BodyStream, Path, State};
 use axum::Json;
 use futures_util::{AsyncReadExt, AsyncWriteExt, StreamExt};
@@ -6,8 +8,8 @@ use sha2::{Digest, Sha256};
 use uuid::Uuid;
 use crate::api::AppState;
 use crate::api::extensions::{AuthenticatedUser, UserPermission};
-use crate::api::model::{PatchTrackMetadata, TrackMetadataResponse, UploadTrackResponse};
-use crate::api::paths::metadata::extract_track_metadata;
+use crate::api::model::{AlbumMetadataResponse, PatchAlbumMetadata, PatchTrackMetadata, TrackMetadataResponse, UploadTrackResponse};
+use crate::api::paths::metadata::{extract_album_metadata, extract_track_metadata};
 use crate::data::model::{BsonId, TrackFormat, UndefinedTrack};
 use crate::err::AstralError;
 use crate::metadata::binary::extract_metadata_from_bytes;
@@ -141,6 +143,10 @@ pub async fn patch_track_metadata(
     AuthenticatedUser(user): AuthenticatedUser,
     Json(PatchTrackMetadata { track_name, track_length, is_explicit, number, disc_number }): Json<PatchTrackMetadata>
 ) -> Res<Json<TrackMetadataResponse>> {
+    if !user.permissions.contains(&UserPermission::ChangeMetadata) {
+        return Err(AstralError::Unauthorized(String::from("You are not authorized to change metadata.")))
+    }
+
     let mut doc_object = doc!();
     if let Some(track_name) = track_name {
         doc_object.insert("name", track_name);
@@ -164,6 +170,67 @@ pub async fn patch_track_metadata(
 
     Ok(Json(TrackMetadataResponse {
         track_id,
+        metadata
+    }))
+}
+
+/// Updates metadata for a single album
+#[utoipa::path(
+    patch,
+    path = "/upload/album/{uuid}/patch",
+    request_body = PatchAlbumMetadata,
+    responses(
+        (status = 400, response = AstralError),
+        (status = 200, body = AlbumMetadataResponse, description = "Successfully patched album metadata")
+    ),
+    params(
+        ("uuid" = Uuid, Path, description = "UUID of the album to patch"),
+    ),
+    tag = "upload"
+)]
+pub async fn patch_album_metadata(
+    State(AppState { db, .. }): State<AppState>,
+    Path(album_id): Path<Uuid>,
+    AuthenticatedUser(user): AuthenticatedUser,
+    Json(PatchAlbumMetadata { album_name, tracks, release_date, genres }): Json<PatchAlbumMetadata>
+) -> Res<Json<AlbumMetadataResponse>> {
+    if !user.permissions.contains(&UserPermission::ChangeMetadata) {
+        return Err(AstralError::Unauthorized(String::from("You are not authorized to change metadata.")))
+    }
+
+    let album_id = BsonId::from_uuid_1(album_id);
+    let old_data = db.albums_metadata.find_one(doc! { "album_id": &album_id }, None).await?
+        .ok_or_else(|| AstralError::NotFound(String::from("Could not find an album with this UUID")))?;
+    let mut doc_object = doc!();
+    if let Some(album_name) = album_name {
+        doc_object.insert("name", album_name);
+    }
+    if let Some(release_date) = release_date {
+        doc_object.insert("release_date", release_date as i64);
+    }
+    if let Some(genres) = genres {
+        doc_object.insert("genres", genres);
+    }
+    if let Some(tracks) = tracks {
+        let tracks = tracks.into_iter().map(BsonId::from_uuid_1);
+        let old_tracks: HashSet<BsonId, RandomState> = HashSet::from_iter(old_data.tracks.into_iter());
+        let new_tracks: HashSet<BsonId, RandomState> = HashSet::from_iter(tracks.clone());
+        // these are the tracks that we will have to remove album reference from
+        let remove_album: Vec<&BsonId> = old_tracks.difference(&new_tracks).collect();
+        // these are the tracks that we will have to add album reference to
+        let add_album: Vec<&BsonId> = new_tracks.difference(&old_tracks).collect();
+
+        // adding album data
+        db.tracks_metadata.update_many(doc! { "track_id": { "$in": &add_album } }, doc! { "$addToSet": { "albums": &album_id } }, None).await?;
+        db.tracks_metadata.update_many(doc! { "track_id": { "$in": &remove_album} }, doc! { "$pull": { "albums": &album_id } }, None).await?;
+        doc_object.insert("tracks", tracks.collect::<Vec<_>>());
+    }
+    db.albums_metadata.update_one(doc! { "album_id": &album_id }, doc! { "$set": doc_object }, None).await?;
+
+    let metadata = extract_album_metadata(&db, album_id).await?;
+
+    Ok(Json(AlbumMetadataResponse {
+        album_id: album_id.to_uuid_1(),
         metadata
     }))
 }
