@@ -138,6 +138,8 @@ pub struct PatchAlbumMetadata {
     pub album_name: Option<String>,
     /// All tracks inside this album
     pub tracks: Option<Vec<Uuid>>,
+    /// Artists who worked on this album
+    pub artists: Option<Vec<Uuid>>,
     /// Unix timestamp in millis for the release date of this album
     pub release_date: Option<u64>,
     /// Most prominent genres in this album.

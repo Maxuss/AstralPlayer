@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use axum::extract::{BodyStream, Path, State};
 use axum::Json;
 use futures_util::{AsyncReadExt, AsyncWriteExt, StreamExt};
-use mongodb::bson::doc;
+use mongodb::bson::{bson, doc};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 use crate::api::AppState;
@@ -192,7 +192,7 @@ pub async fn patch_album_metadata(
     State(AppState { db, .. }): State<AppState>,
     Path(album_id): Path<Uuid>,
     AuthenticatedUser(user): AuthenticatedUser,
-    Json(PatchAlbumMetadata { album_name, tracks, release_date, genres }): Json<PatchAlbumMetadata>
+    Json(PatchAlbumMetadata { album_name, tracks, artists, release_date, genres }): Json<PatchAlbumMetadata>
 ) -> Res<Json<AlbumMetadataResponse>> {
     if !user.permissions.contains(&UserPermission::ChangeMetadata) {
         return Err(AstralError::Unauthorized(String::from("You are not authorized to change metadata.")))
@@ -213,7 +213,7 @@ pub async fn patch_album_metadata(
     }
     if let Some(tracks) = tracks {
         let tracks = tracks.into_iter().map(BsonId::from_uuid_1);
-        let old_tracks: HashSet<BsonId, RandomState> = HashSet::from_iter(old_data.tracks.into_iter());
+        let old_tracks: HashSet<BsonId, RandomState> = HashSet::from_iter(old_data.tracks.clone().into_iter());
         let new_tracks: HashSet<BsonId, RandomState> = HashSet::from_iter(tracks.clone());
         // these are the tracks that we will have to remove album reference from
         let remove_album: Vec<&BsonId> = old_tracks.difference(&new_tracks).collect();
@@ -224,6 +224,26 @@ pub async fn patch_album_metadata(
         db.tracks_metadata.update_many(doc! { "track_id": { "$in": &add_album } }, doc! { "$addToSet": { "albums": &album_id } }, None).await?;
         db.tracks_metadata.update_many(doc! { "track_id": { "$in": &remove_album} }, doc! { "$pull": { "albums": &album_id } }, None).await?;
         doc_object.insert("tracks", tracks.collect::<Vec<_>>());
+    }
+    if let Some(artists) = artists {
+        let artists = artists.into_iter().map(BsonId::from_uuid_1);
+        let old_artists: HashSet<BsonId, RandomState> = HashSet::from_iter(old_data.artists.into_iter());
+        let new_artists: HashSet<BsonId, RandomState> = HashSet::from_iter(artists.clone());
+
+        // these are the artists that we will have to remove album reference from
+        let remove_album: Vec<&BsonId> = old_artists.difference(&new_artists).collect();
+        // these are the artists that we will have to add album reference to
+        let add_album: Vec<&BsonId> = new_artists.difference(&old_artists).collect();
+
+        let tracks = if doc_object.contains_key("tracks") {
+            doc_object.get("tracks").unwrap().clone()
+        } else {
+            bson!(old_data.tracks)
+        };
+
+        db.artists_metadata.update_many(doc! { "artist_id": { "$in": &add_album } }, doc! { "$addToSet": { "albums": &album_id, "tracks": { "$each": &tracks } }}, None).await?;
+        db.artists_metadata.update_many(doc! { "artist_id": { "$in": &remove_album } }, doc! { "$pull": { "albums": &album_id }, "$pullAll": { "tracks": &tracks } }, None).await?;
+        doc_object.insert("artists", artists.collect::<Vec<_>>());
     }
     db.albums_metadata.update_one(doc! { "album_id": &album_id }, doc! { "$set": doc_object }, None).await?;
 
