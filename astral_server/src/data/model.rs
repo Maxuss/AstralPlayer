@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use uuid::Uuid;
 use crate::api::extensions::UserPermission;
 
 pub type BsonId = mongodb::bson::Uuid;
@@ -23,6 +22,10 @@ pub struct TrackMetadata {
     pub is_explicit: bool,
     /// File format of this track
     pub format: TrackFormat,
+    /// Positional number of this track
+    pub number: u16,
+    /// Number of the disc this track is in
+    pub disc_number: u16,
 }
 
 /// Artist metadata representation in the DB

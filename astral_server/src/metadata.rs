@@ -25,7 +25,9 @@ pub async fn classify_insert_metadata(
         artists: vec![],
         albums: vec![],
         is_explicit: false, // TODO: implement later
-        format: metadata.format
+        format: metadata.format,
+        number: metadata.number,
+        disc_number: metadata.disc_number
     };
 
     // album
@@ -143,7 +145,9 @@ pub struct ExtractedTrackMetadata {
     pub album_artists: Vec<String>,
     pub cover_art: Option<PictureOwned>,
     pub duration: f64,
-    pub format: TrackFormat
+    pub format: TrackFormat,
+    pub number: u16,
+    pub disc_number: u16
 }
 
 #[derive(Debug, Clone)]

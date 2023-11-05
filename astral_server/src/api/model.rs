@@ -2,6 +2,7 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::{ToResponse, ToSchema};
 use uuid::Uuid;
+use crate::data::model::TrackFormat;
 
 //#region Responses
 
@@ -153,6 +154,12 @@ pub struct FullTrackMetadata {
     pub albums: Vec<MinifiedAlbumMetadata>,
     /// Whether this track contains explicit lyrics
     pub is_explicit: bool,
+    /// Format of this track
+    pub format: TrackFormat,
+    /// Positional number of this track
+    pub number: u16,
+    /// Number of the disc this track is on
+    pub disc_number: u16,
 }
 
 /// Essential, but minified track metadata
@@ -173,6 +180,12 @@ pub struct MinifiedTrackMetadata {
     /// Album IDs this track is part of
     #[schema(example = example_album_ids)]
     pub album_ids: Vec<Uuid>,
+    /// Format of this track
+    pub format: TrackFormat,
+    /// Positional number of this track
+    pub number: u16,
+    /// Number of the disc this track is on
+    pub disc_number: u16,
     /// Whether this track contains explicit lyrics
     pub is_explicit: bool,
 }

@@ -1,21 +1,18 @@
-use std::pin::Pin;
 use std::str::FromStr;
-use std::task::{Context, Poll};
 use axum::extract::{Path, State};
 use axum::{Json, TypedHeader};
 use axum::body::StreamBody;
 use axum::headers::ContentType;
 use chrono::NaiveDateTime;
-use futures_util::{AsyncRead, AsyncReadExt, Stream, StreamExt};
+use futures_util::{AsyncReadExt, StreamExt};
 use mongodb::bson::doc;
 use mongodb::GridFsDownloadStream;
-use mongodb::options::GridFsDownloadByNameOptions;
 use tokio_util::compat::{Compat, FuturesAsyncReadCompatExt};
 use tokio_util::io::ReaderStream;
 use uuid::Uuid;
 use crate::api::AppState;
 use crate::api::extensions::AuthenticatedUser;
-use crate::api::model::{TrackMetadataResponse, AlbumMetadataResponse, ArtistMetadataResponse, FullTrackMetadata, MinifiedArtistMetadata, MinifiedAlbumMetadata, MinifiedTrackMetadata, FullArtistMetadata};
+use crate::api::model::{TrackMetadataResponse, AlbumMetadataResponse, ArtistMetadataResponse, FullTrackMetadata, MinifiedArtistMetadata, MinifiedAlbumMetadata, MinifiedTrackMetadata, FullArtistMetadata, FullAlbumMetadata};
 use crate::data::AstralDatabase;
 use crate::data::model::{AlbumMetadata, ArtistMetadata, BsonId, TrackMetadata};
 use crate::err::AstralError;
@@ -89,12 +86,30 @@ pub async fn get_artist_metadata(
         ("id" = Uuid, Path, description = "UUID of the album")
     ),
     responses(
-        (status = 200, response = AlbumMetadataResponse)
+        (status = 200, response = AlbumMetadataResponse),
+        (status = 400, response = AstralError)
     ),
     tag = "metadata"
 )]
-pub async fn get_album_metadata() -> Json<AlbumMetadataResponse> {
-    todo!()
+pub async fn get_album_metadata(
+    State(AppState { db, .. }): State<AppState>,
+    Path(uuid): Path<Uuid>,
+    AuthenticatedUser(_): AuthenticatedUser
+) -> Res<Json<AlbumMetadataResponse>> {
+    let album = db.albums_metadata.find_one(doc! { "album_id": uuid }, None).await?
+        .ok_or_else(|| AstralError::NotFound(format!("Could not find album with UUID: {uuid}")))?;
+    Ok(Json(
+        AlbumMetadataResponse {
+            album_id: album.album_id.to_uuid_1(),
+            metadata: FullAlbumMetadata {
+                album_name: album.name,
+                artists: extract_minified_artists(&db, album.artists).await?,
+                tracks: extract_minified_tracks(&db, album.tracks).await?,
+                release_date: NaiveDateTime::from_timestamp_millis(album.release_date as i64).unwrap().and_utc(),
+                genres: album.genres
+            }
+        }
+    ))
 }
 
 /// Gets cover art of an album
@@ -176,6 +191,9 @@ pub async fn extract_track_metadata(db: &AstralDatabase, track_id: BsonId) -> Re
         artists: extract_minified_artists(db, track.artists).await?,
         albums: extract_minified_albums(db, track.albums).await?,
         is_explicit: track.is_explicit,
+        disc_number: track.disc_number,
+        number: track.number,
+        format: track.format
     })
 }
 
@@ -212,6 +230,9 @@ async fn extract_minified_tracks(db: &AstralDatabase, tracks: Vec<BsonId>) -> Re
         track_length: each.length,
         artist_ids: each.artists.into_iter().map(BsonId::to_uuid_1).collect(),
         album_ids: each.albums.into_iter().map(BsonId::to_uuid_1).collect(),
+        format: each.format,
+        number: each.number,
+        disc_number: each.disc_number,
         is_explicit: each.is_explicit,
     }).collect())
 }

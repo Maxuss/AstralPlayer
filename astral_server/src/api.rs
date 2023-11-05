@@ -9,11 +9,10 @@ use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::api::docs::ApiDoc;
-use crate::api::extensions::{try_obtain_paseto_secret, UserPermission};
+use crate::api::extensions::try_obtain_paseto_secret;
 use crate::data::AstralDatabase;
 
 use paths::*;
-use crate::data::model::InviteCode;
 
 /// Contains model definition of requests and response objects
 pub mod model;
@@ -46,6 +45,7 @@ pub async fn start_axum() -> anyhow::Result<()> {
         // metadata
         .route("/metadata/track/:uuid", get(metadata::get_track_metadata))
         .route("/metadata/artist/:uuid", get(metadata::get_artist_metadata))
+        .route("/metadata/album/:uuid", get(metadata::get_album_metadata))
         .route("/metadata/album/:uuid/cover", get(metadata::get_album_cover_art))
         .route("/metadata/track/:uuid/cover", get(metadata::get_track_cover_art))
 

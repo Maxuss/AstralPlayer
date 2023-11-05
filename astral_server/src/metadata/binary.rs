@@ -14,6 +14,8 @@ macro_rules! build_from_tag {
                 album_name: $tag.album_title().unwrap_or_default().to_owned(),
                 cover_art: $tag.album_cover().map(<audiotags::Picture as Into<PictureOwned>>::into),
                 duration: $tag.duration().unwrap_or(0f64).floor(),
+                number: $tag.track_number().unwrap_or(0u16),
+                disc_number: $tag.disc_number().unwrap_or(0u16),
                 $format
             };
             Ok(common_metadata.clone())
