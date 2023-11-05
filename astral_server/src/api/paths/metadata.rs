@@ -61,18 +61,11 @@ pub async fn get_artist_metadata(
     Path(uuid): Path<Uuid>,
     AuthenticatedUser(_): AuthenticatedUser
 ) -> Res<Json<ArtistMetadataResponse>> {
-    let artist = db.artists_metadata.find_one(doc! { "artist_id": uuid }, None).await?
-        .ok_or_else(|| AstralError::NotFound(format!("Could not find artist with UUID: {uuid}")))?;
+    let metadata = extract_artist_metadata(&db, BsonId::from_uuid_1(uuid.clone())).await?;
     Ok(Json(
         ArtistMetadataResponse {
-            artist_id: artist.artist_id.to_uuid_1(),
-            metadata: FullArtistMetadata {
-                artist_name: artist.name,
-                albums: extract_minified_albums(&db, artist.albums).await?,
-                genres: artist.genres.into_keys().collect(),
-                about_artist: artist.about,
-                tracks: artist.tracks.into_iter().map(BsonId::to_uuid_1).collect()
-            }
+            artist_id: uuid,
+            metadata
         }
     ))
 
@@ -199,6 +192,18 @@ pub async fn extract_album_metadata(db: &AstralDatabase, album_id: BsonId) -> Re
         tracks: extract_minified_tracks(&db, album.tracks).await?,
         release_date: NaiveDateTime::from_timestamp_millis(album.release_date as i64).unwrap().and_utc(),
         genres: album.genres
+    })
+}
+
+pub async fn extract_artist_metadata(db: &AstralDatabase, artist_id: BsonId) -> Res<FullArtistMetadata> {
+    let artist = db.artists_metadata.find_one(doc! { "artist_id": artist_id }, None).await?
+        .ok_or_else(|| AstralError::NotFound(format!("Could not find album with UUID: {artist_id}")))?;
+    Ok(FullArtistMetadata {
+        artist_name: artist.name,
+        albums: extract_minified_albums(&db, artist.albums).await?,
+        genres: artist.genres.into_keys().collect(),
+        about_artist: artist.about,
+        tracks: artist.tracks.into_iter().map(BsonId::to_uuid_1).collect()
     })
 }
 

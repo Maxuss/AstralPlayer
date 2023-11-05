@@ -8,8 +8,8 @@ use sha2::{Digest, Sha256};
 use uuid::Uuid;
 use crate::api::AppState;
 use crate::api::extensions::{AuthenticatedUser, UserPermission};
-use crate::api::model::{AlbumMetadataResponse, PatchAlbumMetadata, PatchTrackMetadata, TrackMetadataResponse, UploadTrackResponse};
-use crate::api::paths::metadata::{extract_album_metadata, extract_track_metadata};
+use crate::api::model::{AlbumMetadataResponse, ArtistMetadataResponse, PatchAlbumMetadata, PatchArtistMetadata, PatchTrackMetadata, TrackMetadataResponse, UploadTrackResponse};
+use crate::api::paths::metadata::{extract_album_metadata, extract_artist_metadata, extract_track_metadata};
 use crate::data::model::{BsonId, TrackFormat, UndefinedTrack};
 use crate::err::AstralError;
 use crate::metadata::binary::extract_metadata_from_bytes;
@@ -253,4 +253,66 @@ pub async fn patch_album_metadata(
         album_id: album_id.to_uuid_1(),
         metadata
     }))
+}
+
+/// Updates metadata for a single artist
+#[utoipa::path(
+    patch,
+    path = "/upload/artist/{uuid}/patch",
+    request_body = PatchAlbumMetadata,
+    responses(
+        (status = 400, response = AstralError),
+        (status = 200, body = ArtistMetadataResponse, description = "Successfully patched artist metadata")
+    ),
+    params(
+        ("uuid" = Uuid, Path, description = "UUID of the artist to patch"),
+    ),
+    tag = "upload"
+)]
+pub async fn patch_artist_metadata(
+    State(AppState { db, .. }): State<AppState>,
+    Path(artist_id): Path<Uuid>,
+    AuthenticatedUser(user): AuthenticatedUser,
+    Json(PatchArtistMetadata { artist_name, albums, about_artist }): Json<PatchArtistMetadata>
+) -> Res<Json<ArtistMetadataResponse>> {
+    if !user.permissions.contains(&UserPermission::ChangeMetadata) {
+        return Err(AstralError::Unauthorized(String::from("You are not authorized to change metadata.")))
+    }
+
+    let artist_id = BsonId::from_uuid_1(artist_id);
+    let old_data = db.artists_metadata.find_one(doc! { "artist_id": &artist_id }, None).await?
+        .ok_or_else(|| AstralError::NotFound(String::from("Could not find an artist with this UUID")))?;
+    let mut doc_object = doc!();
+
+    if let Some(name) = artist_name {
+        doc_object.insert("name", name);
+    }
+    if let Some(about) = about_artist {
+        doc_object.insert("about", about);
+    }
+    if let Some(albums) = albums {
+        let albums = albums.into_iter().map(BsonId::from_uuid_1);
+        let old_albums: HashSet<BsonId, RandomState> = HashSet::from_iter(old_data.albums.clone().into_iter());
+        let new_albums: HashSet<BsonId, RandomState> = HashSet::from_iter(albums.clone());
+
+        // these are the albums that we will have to remove artist reference from
+        let remove_artist: Vec<&BsonId> = old_albums.difference(&new_albums).collect();
+        // these are the albums that we will have to add artist reference to
+        let add_artist: Vec<&BsonId> = new_albums.difference(&old_albums).collect();
+
+        db.albums_metadata.update_many(doc! { "album_id": { "$in": add_artist } }, doc! { "$addToSet": { "artists": &artist_id } }, None).await?;
+        db.albums_metadata.update_many(doc! { "album_id": { "$in": remove_artist } }, doc! { "$pull": { "artists": &artist_id } }, None).await?;
+
+        doc_object.insert("albums", albums.collect::<Vec<_>>());
+    }
+
+    db.artists_metadata.update_one(doc! { "artist_id": &artist_id }, doc! { "$set": doc_object }, None).await?;
+
+    let metadata = extract_artist_metadata(&db, artist_id).await?;
+
+    Ok(Json(ArtistMetadataResponse {
+        artist_id: artist_id.to_uuid_1(),
+        metadata
+    }))
+
 }
