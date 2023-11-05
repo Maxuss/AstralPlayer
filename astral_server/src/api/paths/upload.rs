@@ -18,7 +18,7 @@ use crate::Res;
 #[utoipa::path(
     post,
     path = "/upload/track/{format}",
-    request_body = BinaryFileUpload,
+    request_body = BinaryFile,
     responses(
         (status = 400, response = AstralError),
         (status = 200, response = UploadTrackResponse)

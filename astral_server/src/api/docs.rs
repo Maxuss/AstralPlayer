@@ -19,11 +19,11 @@ use crate::err::AstralError;
         schemas(
             FullTrackMetadata, FullArtistMetadata, FullAlbumMetadata, MinifiedTrackMetadata, MinifiedAlbumMetadata, MinifiedArtistMetadata,
             AuthenticationRequest, RegisterRequest,
-            TrackFormat, BinaryFileUpload
+            TrackFormat, BinaryFile
         )
     ),
     paths(
-        get_track_metadata, get_artist_metadata, get_album_metadata,
+        get_track_metadata, get_artist_metadata, get_album_metadata, get_album_cover_art, get_track_cover_art,
         register_with_token, login, obtain_access_token,
         upload_track, guess_metadata
     ),
@@ -37,4 +37,4 @@ pub struct ApiDoc;
 
 #[derive(ToSchema)]
 #[schema(format = Binary)]
-pub struct BinaryFileUpload(Vec<u8>);
+pub struct BinaryFile(Vec<u8>);

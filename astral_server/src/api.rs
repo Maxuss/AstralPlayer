@@ -45,6 +45,9 @@ pub async fn start_axum() -> anyhow::Result<()> {
 
         // metadata
         .route("/metadata/track/:uuid", get(metadata::get_track_metadata))
+        .route("/metadata/album/:uuid/cover", get(metadata::get_album_cover_art))
+        .route("/metadata/track/:uuid/cover", get(metadata::get_track_cover_art))
+
 
         // auth
         .route("/auth/register", post(auth::register_with_token))

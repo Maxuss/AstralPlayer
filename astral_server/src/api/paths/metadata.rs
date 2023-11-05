@@ -1,8 +1,17 @@
+use std::pin::Pin;
+use std::str::FromStr;
+use std::task::{Context, Poll};
 use axum::extract::{Path, State};
-use axum::Json;
+use axum::{Json, TypedHeader};
+use axum::body::StreamBody;
+use axum::headers::ContentType;
 use chrono::NaiveDateTime;
-use futures_util::StreamExt;
+use futures_util::{AsyncRead, AsyncReadExt, Stream, StreamExt};
 use mongodb::bson::doc;
+use mongodb::GridFsDownloadStream;
+use mongodb::options::GridFsDownloadByNameOptions;
+use tokio_util::compat::{Compat, FuturesAsyncReadCompatExt};
+use tokio_util::io::ReaderStream;
 use uuid::Uuid;
 use crate::api::AppState;
 use crate::api::extensions::AuthenticatedUser;
@@ -13,7 +22,6 @@ use crate::err::AstralError;
 use crate::Res;
 
 /// Gets full metadata of a single track
-#[axum_macros::debug_handler]
 #[utoipa::path(
     get,
     path = "/metadata/track/{id}",
@@ -39,7 +47,6 @@ pub async fn get_track_metadata(
 }
 
 /// Gets full metadata of a single artist
-#[axum_macros::debug_handler]
 #[utoipa::path(
     get,
     path = "/metadata/artist/{id}",
@@ -57,7 +64,6 @@ pub async fn get_artist_metadata() -> Json<ArtistMetadataResponse> {
 }
 
 /// Gets full metadata of a single album
-#[axum_macros::debug_handler]
 #[utoipa::path(
     get,
     path = "/metadata/album/{id}",
@@ -73,9 +79,79 @@ pub async fn get_album_metadata() -> Json<AlbumMetadataResponse> {
     todo!()
 }
 
+/// Gets cover art of an album
+#[utoipa::path(
+    get,
+    path = "/metadata/album/{id}/cover",
+    params(
+        ("id" = Uuid, Path, description = "UUID of the album")
+    ),
+    responses(
+        (status = 200, body = BinaryFile, description = "Found the album cover art"),
+        (status = 400, response = AstralError)
+    ),
+    tag = "metadata"
+)]
+pub async fn get_album_cover_art(
+    State(AppState { db, .. }): State<AppState>,
+    Path(uuid): Path<Uuid>,
+    AuthenticatedUser(_): AuthenticatedUser,
+) -> Res<(TypedHeader<ContentType>, StreamBody<ReaderStream<Compat<GridFsDownloadStream>>>)> {
+    let metadata = db.gridfs_album_arts.find(doc! { "filename": uuid.to_string() }, None).await?.next().await
+        .ok_or_else(|| AstralError::NotFound(String::from("Couldn't find album cover for this UUID")))??.metadata;
+    let metadata = metadata.unwrap();
+    let mime_type = metadata.get("mime_type").unwrap();
+    let mime_type = mime_type.as_str().unwrap();
+    let download_stream = db.gridfs_album_arts.open_download_stream_by_name(uuid.to_string(), None).await?;
+    let stream_body = StreamBody::new(ReaderStream::new(download_stream.compat()));
+    Ok(
+        (
+            TypedHeader(ContentType::from_str(mime_type).unwrap()),
+            stream_body
+        )
+    )
+}
+
+/// Gets cover art of a track (by querying it's album)
+#[utoipa::path(
+    get,
+    path = "/metadata/track/{id}/cover",
+    params(
+        ("id" = Uuid, Path, description = "UUID of the track")
+    ),
+    responses(
+    (status = 200, body = BinaryFile, description = "Found the album cover art"),
+    (status = 400, response = AstralError)
+    ),
+    tag = "metadata"
+)]
+pub async fn get_track_cover_art(
+    State(AppState { db, .. }): State<AppState>,
+    Path(uuid): Path<Uuid>,
+    AuthenticatedUser(_): AuthenticatedUser,
+) -> Res<(TypedHeader<ContentType>, StreamBody<ReaderStream<Compat<GridFsDownloadStream>>>)> {
+    let track = db.tracks_metadata.find_one(doc! { "track_id": uuid }, None).await?
+        .ok_or_else(|| AstralError::NotFound(String::from("Couldn't find track with this UUID")))?;
+    let album_id = track.albums.first().map(ToOwned::to_owned)
+        .ok_or_else(|| AstralError::NotFound(String::from("This track does not have any albums associated with it")))?;
+    let metadata = db.gridfs_album_arts.find(doc! { "filename": album_id.to_string() }, None).await?.next().await
+        .ok_or_else(|| AstralError::NotFound(String::from("Album for this track does not have a cover")))??.metadata;
+    let metadata = metadata.unwrap();
+    let mime_type = metadata.get("mime_type").unwrap();
+    let mime_type = mime_type.as_str().unwrap();
+    let download_stream = db.gridfs_album_arts.open_download_stream_by_name(album_id.to_string(), None).await?;
+    let stream_body = StreamBody::new(ReaderStream::new(download_stream.compat()));
+    Ok(
+        (
+            TypedHeader(ContentType::from_str(mime_type).unwrap()),
+            stream_body
+        )
+    )
+}
+
 pub async fn extract_track_metadata(db: &AstralDatabase, track_id: BsonId) -> Res<FullTrackMetadata> {
     let track = db.tracks_metadata.find_one(doc! { "track_id": track_id }, None).await?
-        .ok_or_else(|| AstralError::BadRequest(format!("Could not find track with UUID: {track_id}")))?;
+        .ok_or_else(|| AstralError::NotFound(format!("Could not find track with UUID: {track_id}")))?;
     Ok(FullTrackMetadata {
         track_name: track.name,
         track_length: track.length,

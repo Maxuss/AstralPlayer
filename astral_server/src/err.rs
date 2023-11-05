@@ -19,6 +19,9 @@ pub enum AstralError {
     /// Bad client reuqest
     #[error("Invalid request: {0}")]
     BadRequest(String),
+    /// Resource could not be found
+    #[error("Not found: {0}")]
+    NotFound(String),
     /// Client is not authorized to access this endpoint
     #[error("You are unauthorized to access this endpoint: {0}")]
     Unauthorized(String),
@@ -91,6 +94,7 @@ error_impls! {
     Unknown: (INTERNAL_SERVER_ERROR, "unknown");
     Database: (INTERNAL_SERVER_ERROR, "database");
     BadRequest: (BAD_REQUEST, "bad_request");
+    NotFound: (NOT_FOUND, "not_found");
     Unauthorized: (UNAUTHORIZED, "unauthorized");
     IOError: (INTERNAL_SERVER_ERROR, "io");
 

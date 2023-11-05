@@ -5,7 +5,7 @@ use crate::metadata::{ExtractedTrackMetadata, PictureOwned};
 use crate::Res;
 
 macro_rules! build_from_tag {
-    ($tag:ident) => {
+    ($tag:ident, $format:ident) => {
         {
             let common_metadata = ExtractedTrackMetadata {
                 name: $tag.title().unwrap_or_default().to_owned(),
@@ -14,6 +14,7 @@ macro_rules! build_from_tag {
                 album_name: $tag.album_title().unwrap_or_default().to_owned(),
                 cover_art: $tag.album_cover().map(<audiotags::Picture as Into<PictureOwned>>::into),
                 duration: $tag.duration().unwrap_or(0f64).floor(),
+                $format
             };
             Ok(common_metadata.clone())
         }
@@ -25,18 +26,18 @@ pub fn extract_metadata_from_bytes(
     format: TrackFormat,
 ) -> Res<ExtractedTrackMetadata> {
     let mut reader = Cursor::new(bytes);
-    return match format {
+    return match &format {
         TrackFormat::Flac => {
             let tag = FlacTag::from(metaflac::Tag::read_from(&mut reader)?);
-            build_from_tag!(tag)
+            build_from_tag!(tag, format)
         }
         TrackFormat::M4a => {
             let tag = Mp4Tag::from(mp4ameta::Tag::read_from(&mut reader)?);
-            build_from_tag!(tag)
+            build_from_tag!(tag, format)
         }
         TrackFormat::Mp3 => {
             let tag = Id3v2Tag::from(id3::Tag::read_from(&mut reader)?);
-            build_from_tag!(tag)
+            build_from_tag!(tag, format)
         }
     }
 }

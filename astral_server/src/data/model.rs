@@ -21,6 +21,8 @@ pub struct TrackMetadata {
     pub albums: Vec<BsonId>,
     /// Whether this track contains explicit lyrics
     pub is_explicit: bool,
+    /// File format of this track
+    pub format: TrackFormat,
 }
 
 /// Artist metadata representation in the DB

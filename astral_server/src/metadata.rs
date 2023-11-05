@@ -1,10 +1,11 @@
 pub mod binary;
 
 use audiotags::{MimeType, Picture};
-use futures_util::StreamExt;
+use futures_util::{AsyncWriteExt, StreamExt};
 use mongodb::bson::doc;
+use mongodb::options::GridFsUploadOptions;
 use crate::data::AstralDatabase;
-use crate::data::model::{AlbumMetadata, ArtistMetadata, BsonId, TrackMetadata};
+use crate::data::model::{AlbumMetadata, ArtistMetadata, BsonId, TrackFormat, TrackMetadata};
 use crate::Res;
 
 pub async fn classify_insert_metadata(
@@ -24,6 +25,7 @@ pub async fn classify_insert_metadata(
         artists: vec![],
         albums: vec![],
         is_explicit: false, // TODO: implement later
+        format: metadata.format
     };
 
     // album
@@ -116,6 +118,20 @@ pub async fn classify_insert_metadata(
 
     db.tracks_metadata.insert_one(&new_track_metadata, None).await?;
 
+    if let Some(picture) = metadata.cover_art {
+        let found = db.gridfs_album_arts.find(doc! { "filename": &album.album_id.to_string() }, None).await?;
+        if found.count().await > 0 {
+            return Ok(new_track_metadata.track_id)
+        }
+
+        let mt: &str = picture.mime.into();
+        let mut upload_stream = db.gridfs_album_arts
+            .open_upload_stream(album.album_id.to_string(), GridFsUploadOptions::builder().metadata(doc! { "mime_type": mt }).build());
+        upload_stream.write_all(&picture.data).await?;
+        upload_stream.flush().await?;
+        upload_stream.close().await?;
+    }
+
     Ok(new_track_metadata.track_id)
 }
 
@@ -127,6 +143,7 @@ pub struct ExtractedTrackMetadata {
     pub album_artists: Vec<String>,
     pub cover_art: Option<PictureOwned>,
     pub duration: f64,
+    pub format: TrackFormat
 }
 
 #[derive(Debug, Clone)]
