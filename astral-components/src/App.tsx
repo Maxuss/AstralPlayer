@@ -13,6 +13,7 @@ function App() {
                 <AlbumCard artUrl={"https://lastfm.freetls.fastly.net/i/u/770x0/be18330817e87c2230f40bec80632aa5.jpg"} name={"Selected Ambient Works 85-92"} artist={"Aphex Twin"} description={"wawawawaw this is some album description read me please"} />
                 <AlbumCard artUrl={"https://lastfm.freetls.fastly.net/i/u/770x0/5f5f967600ac3bca6e7007ae6c368dfa.jpg"} name={"Wallsocket"} artist={"underscores"} description={"wawawawaw this is some album description read me please"} />
                 <AlbumCard artUrl={"https://lastfm.freetls.fastly.net/i/u/770x0/d2e8cc6713ee2fd861936bc0fb81deab.jpg"} name={"Konkurs"} artist={"Lifelover"} description={"wawawawaw this is some album description read me please"} />
+                <AlbumCard artUrl={"https://lastfm.freetls.fastly.net/i/u/770x0/bb830427ca254d869290b316116fd372.jpg"} name={"October Rust"} artist={"Type O Negative"} description={"wawawawaw this is some album description read me please"} />
             </div>
             <div className="m-5">
                 <Player />

@@ -113,7 +113,7 @@ export const AudioProgressBar: React.FC<ProgressBarProps> = ({ progress, moreTai
             <div className={`w-[50rem] bg-zinc-600 rounded-full h-1 mb-4 outer-hover mt-2 ${moreTailwind}`}>
                 <div className={`bg-zinc-50 h-1 rounded-full inner-hover`} style={{ width: `${Math.round(progress * 100)}%` }}></div>
             </div>
-            <span className="text-zinc-400">{formatTime(duration)}</span>
+            <span className="text-zinc-400 text-sm">{formatTime(duration)}</span>
         </div>
     )
 }
