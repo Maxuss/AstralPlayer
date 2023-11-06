@@ -1,0 +1,7 @@
+.inner-hover {
+    background-color: #f4f4f5
+}
+
+.outer-hover:hover .inner-hover {
+    background-color: #a78bfa
+}

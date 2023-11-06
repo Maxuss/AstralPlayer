@@ -1237,6 +1237,11 @@ hasown@^2.0.0:
   dependencies:
     function-bind "^1.1.2"
 
+howler@^2.2.3:
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/howler/-/howler-2.2.4.tgz#bd3df4a4f68a0118a51e4bd84a2bfc2e93e6e5a1"
+  integrity sha512-iARIBPgcQrwtEr+tALF+rapJ8qSc+Set2GJQl7xT1MQzWaVkFebdJhR3alVlSiUf5U7nAANKuj3aWpwerocD5w==
+
 ignore@^5.2.0, ignore@^5.2.4:
   version "5.2.4"
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.2.4.tgz#a291c0c6178ff1b960befe47fcdec301674a6324"
@@ -1688,6 +1693,13 @@ react-refresh@^0.14.0:
   version "0.14.0"
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.14.0.tgz#4e02825378a5f227079554d4284889354e5f553e"
   integrity sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==
+
+react-use-audio-player@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/react-use-audio-player/-/react-use-audio-player-2.2.0.tgz#bddbb173b245213eecc26d5623d1763d1c9e2b82"
+  integrity sha512-IMM+WiZAq1KUvTwq0sAdRdjEzyG4jzz1tK/JtC/+LLt3z/uJk3AFRLL3pgbOgS/2SnfVzFKCxR7pnBsu6nUFvg==
+  dependencies:
+    howler "^2.2.3"
 
 react@^18.2.0:
   version "18.2.0"
