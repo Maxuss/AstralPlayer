@@ -79,16 +79,16 @@ pub struct UploadTrackResponse {
 #[serde(rename_all = "snake_case", tag = "lyrics_status")]
 pub enum LyricsResponse {
     /// No lyrics available for this song
-    #[example("lyrics" = json!({ "lyrics_status": "no_lyrics" }))]
+    #[response(example = json!({ "lyrics_status": "no_lyrics" }))]
     NoLyrics,
     /// Unsynced lyrics available
-    #[example("lyrics" = json!({ "lyrics_status": "unsynced", "lines": ["abc", "def", "ghi"] }))]
+    #[response(example = json!({ "lyrics_status": "unsynced", "lines": ["abc", "def", "ghi"] }))]
     Unsynced {
         /// Unsynced lines
         lines: Vec<String>
     },
     /// Time synced lyrics available
-    #[example("lyrics" = json!({ "lyrics_status": "synced", "lines": [{ "start_time_ms": 600, "line": "abc" }, { "start_time_ms": 1200, "line": "def" }] }))]
+    #[response(example = json!({ "lyrics_status": "synced", "lines": [{ "start_time_ms": 600, "line": "abc" }, { "start_time_ms": 1200, "line": "def" }] }))]
     Synced {
         /// Synced lines
         lines: Vec<SyncedLyricLine>
@@ -141,6 +141,8 @@ pub struct PatchTrackMetadata {
     pub number: Option<u16>,
     /// Number of the disc this track is on
     pub disc_number: Option<u16>,
+    /// Artists to be changed for this track
+    pub artists: Option<Vec<Uuid>>
 }
 
 /// Request to change assigned artist metadata

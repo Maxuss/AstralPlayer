@@ -13,6 +13,7 @@ use crate::api::extensions::try_obtain_paseto_secret;
 use crate::data::AstralDatabase;
 
 use paths::*;
+use crate::api::paths::lyrics::fetch_musixmatch_lyrics;
 
 /// Contains model definition of requests and response objects
 pub mod model;
@@ -49,6 +50,8 @@ pub async fn start_axum() -> anyhow::Result<()> {
         .route("/metadata/album/:uuid/cover", get(metadata::get_album_cover_art))
         .route("/metadata/track/:uuid/cover", get(metadata::get_track_cover_art))
 
+        // lyrics
+        .route("/lyrics/:uuid", get(lyrics::get_lyrics))
 
         // auth
         .route("/auth/register", post(auth::register_with_token))

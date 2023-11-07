@@ -14,7 +14,7 @@ use crate::err::AstralError;
             TrackMetadataResponse, ArtistMetadataResponse, AlbumMetadataResponse,
             AuthenticationResponse, InviteCodeCheckResponse,
             UploadTrackResponse,
-            LyricsStatus,
+            LyricsResponse,
             AstralError,
         ),
         schemas(

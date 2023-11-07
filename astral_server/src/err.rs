@@ -37,7 +37,13 @@ pub enum AstralError {
     Id3Error(#[from] id3::Error),
     /// Mp4ameta error
     #[error("An error has occurred when reading M4A metadata: {0}")]
-    M4aError(#[from] mp4ameta::Error)
+    M4aError(#[from] mp4ameta::Error),
+    /// Reqwest Error
+    #[error("An error occurred when fetching API internally: {0}")]
+    ReqwestError(#[from] reqwest::Error),
+    /// JSON error
+    #[error("An error occurred when parsing JSON: {0}")]
+    JsonError(#[from] serde_json::Error),
 }
 
 // <editor-fold defaultstate="collapsed" desc="impl macro">
@@ -101,6 +107,8 @@ error_impls! {
     FlacError: (INTERNAL_SERVER_ERROR, "flac");
     Id3Error: (INTERNAL_SERVER_ERROR, "id3");
     M4aError: (INTERNAL_SERVER_ERROR, "m4a");
+    ReqwestError: (INTERNAL_SERVER_ERROR, "reqwest");
+    JsonError: (INTERNAL_SERVER_ERROR, "json");
 }
 
 pub type Res<T> = axum::response::Result<T, AstralError>;

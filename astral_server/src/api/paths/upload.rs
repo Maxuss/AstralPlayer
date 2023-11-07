@@ -141,7 +141,7 @@ pub async fn patch_track_metadata(
     State(AppState { db, .. }): State<AppState>,
     Path(track_id): Path<Uuid>,
     AuthenticatedUser(user): AuthenticatedUser,
-    Json(PatchTrackMetadata { track_name, track_length, is_explicit, number, disc_number }): Json<PatchTrackMetadata>
+    Json(PatchTrackMetadata { track_name, track_length, is_explicit, number, disc_number, artists }): Json<PatchTrackMetadata>
 ) -> Res<Json<TrackMetadataResponse>> {
     if !user.permissions.contains(&UserPermission::ChangeMetadata) {
         return Err(AstralError::Unauthorized(String::from("You are not authorized to change metadata.")))
@@ -162,6 +162,9 @@ pub async fn patch_track_metadata(
     }
     if let Some(disc_number) = disc_number {
         doc_object.insert("disc_number", disc_number as i32);
+    }
+    if let Some(artists) = artists {
+        doc_object.insert("artists", bson!(artists.into_iter().map(BsonId::from_uuid_1).collect::<Vec<_>>()));
     }
     let uid = BsonId::from_uuid_1(track_id.clone());
     db.tracks_metadata.update_one(doc! { "track_id": &uid }, doc! { "$set": doc_object }, None).await?;
