@@ -13,7 +13,6 @@ use crate::api::extensions::try_obtain_paseto_secret;
 use crate::data::AstralDatabase;
 
 use paths::*;
-use crate::api::paths::lyrics::fetch_musixmatch_lyrics;
 
 /// Contains model definition of requests and response objects
 pub mod model;

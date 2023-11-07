@@ -2,7 +2,7 @@ use axum::extract::{Path, State};
 use axum::http::HeaderMap;
 use axum::Json;
 use mongodb::bson::doc;
-use reqwest::{Method, Url};
+use reqwest::Url;
 use reqwest::header::{HeaderName, HeaderValue};
 use serde::Deserialize;
 use serde_json::Value;

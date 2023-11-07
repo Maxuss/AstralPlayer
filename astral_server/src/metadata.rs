@@ -40,7 +40,7 @@ pub async fn classify_insert_metadata(
             (album, false)
         },
         None => {
-            let mut new_album = AlbumMetadata {
+            let new_album = AlbumMetadata {
                 album_id: BsonId::new(),
                 name: metadata.album_name,
                 artists: vec![],
