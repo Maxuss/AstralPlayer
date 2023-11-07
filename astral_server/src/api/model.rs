@@ -2,7 +2,7 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::{ToResponse, ToSchema};
 use uuid::Uuid;
-use crate::data::model::TrackFormat;
+use crate::data::model::{SyncedLyricLine, TrackFormat};
 
 //#region Responses
 
@@ -68,6 +68,31 @@ pub struct InviteCodeCheckResponse {
 pub struct UploadTrackResponse {
     /// UUID of the track that can be used to upload metadata later
     pub track_id: Uuid
+}
+
+//#endregion
+
+//#region Lyrics
+
+/// Found (or not) lyrics for this track
+#[derive(Debug, Clone, Serialize, ToResponse)]
+#[serde(rename_all = "snake_case", tag = "lyrics_status")]
+pub enum LyricsResponse {
+    /// No lyrics available for this song
+    #[example("lyrics" = json!({ "lyrics_status": "no_lyrics" }))]
+    NoLyrics,
+    /// Unsynced lyrics available
+    #[example("lyrics" = json!({ "lyrics_status": "unsynced", "lines": ["abc", "def", "ghi"] }))]
+    Unsynced {
+        /// Unsynced lines
+        lines: Vec<String>
+    },
+    /// Time synced lyrics available
+    #[example("lyrics" = json!({ "lyrics_status": "synced", "lines": [{ "start_time_ms": 600, "line": "abc" }, { "start_time_ms": 1200, "line": "def" }] }))]
+    Synced {
+        /// Synced lines
+        lines: Vec<SyncedLyricLine>
+    }
 }
 
 //#endregion

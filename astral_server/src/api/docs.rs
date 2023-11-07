@@ -14,13 +14,15 @@ use crate::err::AstralError;
             TrackMetadataResponse, ArtistMetadataResponse, AlbumMetadataResponse,
             AuthenticationResponse, InviteCodeCheckResponse,
             UploadTrackResponse,
+            LyricsStatus,
             AstralError,
         ),
         schemas(
             FullTrackMetadata, FullArtistMetadata, FullAlbumMetadata, MinifiedTrackMetadata, MinifiedAlbumMetadata, MinifiedArtistMetadata,
             AuthenticationRequest, RegisterRequest,
             PatchTrackMetadata, PatchArtistMetadata, PatchAlbumMetadata,
-            TrackFormat, BinaryFile
+            TrackFormat, BinaryFile,
+            SyncedLyricLine,
         )
     ),
     paths(

@@ -4,3 +4,5 @@ pub mod metadata;
 pub mod auth;
 /// Handles uploading tracks and metadata
 pub mod upload;
+/// Handles lyrics fetching for songs
+pub mod lyrics;

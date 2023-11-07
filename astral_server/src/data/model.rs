@@ -112,3 +112,43 @@ pub struct UndefinedTrack {
     /// Format of the track
     pub format: TrackFormat
 }
+
+/// Lyrics container for a single track
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrackLyrics {
+    /// ID of the track
+    pub track_id: BsonId,
+    /// The lyrics container
+    #[serde(flatten)]
+    pub status: LyricsStatus,
+}
+
+/// Lyrics status for track lyrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "status")]
+pub enum LyricsStatus {
+    /// No lyrics available
+    NoLyrics {
+        /// No lines
+        lines: ()
+    },
+    /// Time synced lines available
+    Synced {
+        /// Synced lines
+        lines: Vec<SyncedLyricLine>
+    },
+    /// Time unsynced lines available
+    Unsynced {
+        /// Unsynced lines
+        lines: Vec<String>
+    }
+}
+
+/// A single time synced lyrics line
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct SyncedLyricLine {
+    /// Time in milliseconds when this lyric line starts
+    pub start_time_ms: u32,
+    /// Contents of this line
+    pub line: String
+}
