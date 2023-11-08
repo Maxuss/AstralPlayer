@@ -45,7 +45,7 @@ pub async fn get_lyrics(
     };
 }
 
-/// TODO: merge this with metadata fetching
+/// TODO: merge this with metadata fetching?
 pub async fn fetch_musixmatch_lyrics(
     title: String,
     artist: String,
@@ -76,22 +76,51 @@ pub async fn fetch_musixmatch_lyrics(
         .send().await?
         .json::<Value>().await?;
 
-    let body = serde_json::from_str::<Vec<MusixmatchLyricLine>>(json
-        .get("message")
-        .unwrap().get("body")
-        .unwrap().get("macro_calls")
-        .unwrap().get("track.subtitles.get")
-        .unwrap().get("message")
-        .unwrap().get("body")
-        .unwrap().get("subtitle_list")
-        .unwrap().as_array()
-        .unwrap().get(0)
-        .unwrap().get("subtitle")
-        .unwrap().get("subtitle_body")
-        .unwrap().as_str().unwrap()
-    )?.into_iter().map(|each| SyncedLyricLine { start_time_ms: (each.time.total * 1000f32) as u32, line: each.text }).collect::<Vec<_>>();
+    let body = &json["message"]["body"]["macro_calls"];
 
-    Ok(LyricsStatus::Synced { lines: body })
+    let status_code = body["matcher.track.get"]["message"]["header"]["status_code"].as_i64().unwrap();
+    if status_code != 200 {
+        return match status_code {
+            404 => Err(AstralError::NotFound(String::from("Could not find lyrics for this track"))),
+            401 => Err(AstralError::BadRequest(String::from("Timed out. Wait a few minutes before trying again."))),
+            other => Err(AstralError::BadRequest(format!("Request error {other}: {:?}", body["matcher.track.get"]["message"]["header"])))
+        }
+    }
+
+    let meta = &body["track.lyrics.get"]["message"]["body"];
+    if meta.is_object() {
+        if meta["lyrics"]["restricted"].as_i64().unwrap() != 0 {
+            return Err(AstralError::BadRequest(String::from("Lyrics for this track are restricted.")))
+        }
+    }
+
+    let meta = &body["matcher.track.get"]["message"]["body"];
+
+    if meta["track"]["has_subtitles"].as_i64().unwrap() != 0 {
+        // has synced lyrics
+        let subtitle = &body["track.subtitles.get"]["message"]["body"]["subtitle_list"][0]["subtitle"];
+        if subtitle.is_object() {
+            let lines =
+                serde_json::from_str::<Vec<MusixmatchLyricLine>>(subtitle["subtitle_body"].as_str().unwrap())?;
+            let body =
+                lines.into_iter()
+                    .map(|each| SyncedLyricLine { start_time_ms: (each.time.total * 1000f32) as u32, line: if each.text.is_empty() { "♪".to_string() } else { each.text } })
+                    .collect::<Vec<_>>();
+            Ok(LyricsStatus::Synced { lines: body })
+        } else {
+            Err(AstralError::BadRequest(String::from("Invalid lyrics response")))
+        }
+    } else if meta["track"]["has_lyrics"].as_i64().unwrap() != 0 {
+        // has unsynced
+        let body = &body["track.lyrics.get"]["message"]["body"]["lyrics"]["lyrics_body"];
+        let lines = body.as_str().unwrap().split('\n').filter(|it| !it.is_empty()).map(String::from).collect::<Vec<_>>();
+        Ok(LyricsStatus::Unsynced { lines })
+    } else if meta["track"]["instrumental"].as_i64().unwrap() != 0 {
+        // instrumental
+        Ok(LyricsStatus::Unsynced { lines: vec![String::from("♪ Instrumental")] })
+    } else {
+        Ok(LyricsStatus::NoLyrics { lines: () })
+    }
 }
 
 #[derive(Debug, Deserialize)]

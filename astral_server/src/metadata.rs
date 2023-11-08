@@ -1,4 +1,5 @@
 pub mod binary;
+pub mod musix;
 
 use audiotags::{MimeType, Picture};
 use futures_util::{AsyncWriteExt, StreamExt};
