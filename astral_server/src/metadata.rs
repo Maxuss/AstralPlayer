@@ -11,7 +11,8 @@ use crate::Res;
 
 pub async fn classify_insert_metadata(
     db: &AstralDatabase,
-    metadata: ExtractedTrackMetadata
+    metadata: ExtractedTrackMetadata,
+    new_uid: BsonId,
 ) -> Res<BsonId> {
     // first check if track even exists
     if let Some(track) = db.tracks_metadata.find_one(doc! { "name": &metadata.name, "length": metadata.duration as u32 }, None).await? {
@@ -20,12 +21,12 @@ pub async fn classify_insert_metadata(
     }
 
     let mut new_track_metadata = TrackMetadata {
-        track_id: BsonId::new(),
+        track_id: new_uid,
         name: metadata.name,
         length: metadata.duration as u32,
         artists: vec![],
         albums: vec![],
-        is_explicit: false, // TODO: implement later
+        is_explicit: metadata.is_explicit,
         format: metadata.format,
         number: metadata.number,
         disc_number: metadata.disc_number
@@ -46,7 +47,7 @@ pub async fn classify_insert_metadata(
                 name: metadata.album_name,
                 artists: vec![],
                 tracks: vec![new_track_metadata.track_id],
-                release_date: 0,
+                release_date: metadata.release_date,
                 genres: vec![],
             };
             new_track_metadata.albums.push(new_album.album_id.clone());
@@ -148,7 +149,9 @@ pub struct ExtractedTrackMetadata {
     pub duration: f64,
     pub format: TrackFormat,
     pub number: u16,
-    pub disc_number: u16
+    pub disc_number: u16,
+    pub release_date: u64,
+    pub is_explicit: bool
 }
 
 #[derive(Debug, Clone)]

@@ -65,8 +65,6 @@ pub async fn fetch_musixmatch_lyrics(
         ("usertoken", &usertoken.unwrap_or("2005218b74f939209bda92cb633c7380612e14cb7fe92dcd6a780f".to_string()))
     ]).unwrap();
 
-    println!("{uri}");
-
     let client = reqwest::Client::new();
     let json = client.get(uri)
         .headers(HeaderMap::from_iter([

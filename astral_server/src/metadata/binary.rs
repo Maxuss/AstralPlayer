@@ -16,6 +16,8 @@ macro_rules! build_from_tag {
                 duration: $tag.duration().unwrap_or(0f64).floor(),
                 number: $tag.track_number().unwrap_or(0u16),
                 disc_number: $tag.disc_number().unwrap_or(0u16),
+                release_date: 0,
+                is_explicit: false,
                 $format
             };
             Ok(common_metadata.clone())

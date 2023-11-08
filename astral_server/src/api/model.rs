@@ -175,6 +175,17 @@ pub struct PatchAlbumMetadata {
     pub genres: Option<Vec<String>>,
 }
 
+/// Request to fetch track metadata from musixmatch with minimal track info
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct FetchMusixmatchMetadata {
+    /// Artist who produced this track
+    pub artist: String,
+    /// Title of this track
+    pub title: String,
+    /// Optional album for this track
+    pub album: Option<String>
+}
+
 //#endregion
 
 //#region Object parts
