@@ -1,12 +1,14 @@
 pub mod binary;
 pub mod musix;
+pub mod merged;
 
 use audiotags::{MimeType, Picture};
 use futures_util::{AsyncWriteExt, StreamExt};
 use mongodb::bson::doc;
 use mongodb::options::GridFsUploadOptions;
+use reqwest::Url;
 use crate::data::AstralDatabase;
-use crate::data::model::{AlbumMetadata, ArtistMetadata, BsonId, TrackFormat, TrackMetadata};
+use crate::data::model::{AlbumMetadata, ArtistMetadata, BsonId, LyricsStatus, TrackFormat, TrackLyrics, TrackMetadata};
 use crate::Res;
 
 pub async fn classify_insert_metadata(
@@ -122,18 +124,43 @@ pub async fn classify_insert_metadata(
 
     db.tracks_metadata.insert_one(&new_track_metadata, None).await?;
 
+    // lyrics
+    if let Some(lyrics) = metadata.lyrics {
+        db.lyrics.insert_one(TrackLyrics {
+            track_id: new_track_metadata.track_id.clone(),
+            status: lyrics,
+        }, None).await?;
+    }
+
+    // cover art
     if let Some(picture) = metadata.cover_art {
         let found = db.gridfs_album_arts.find(doc! { "filename": &album.album_id.to_string() }, None).await?;
         if found.count().await > 0 {
             return Ok(new_track_metadata.track_id)
         }
 
-        let mt: &str = picture.mime.into();
-        let mut upload_stream = db.gridfs_album_arts
-            .open_upload_stream(album.album_id.to_string(), GridFsUploadOptions::builder().metadata(doc! { "mime_type": mt }).build());
-        upload_stream.write_all(&picture.data).await?;
-        upload_stream.flush().await?;
-        upload_stream.close().await?;
+        match picture {
+            AlbumArt::Bytes(picture) => {
+                let mt: &str = picture.mime.into();
+                let mut upload_stream = db.gridfs_album_arts
+                    .open_upload_stream(album.album_id.to_string(), GridFsUploadOptions::builder().metadata(doc! { "mime_type": mt }).build());
+                upload_stream.write_all(&picture.data).await?;
+                upload_stream.flush().await?;
+                upload_stream.close().await?;
+            }
+            AlbumArt::Url(uri, mt) => {
+                let mt: String = mt.into();
+
+                let mut d_stream = reqwest::get(uri).await?.bytes_stream();
+                let mut u_stream = db.gridfs_album_arts
+                    .open_upload_stream(album.album_id.to_string(), GridFsUploadOptions::builder().metadata(doc! { "mime_type": mt }).build());
+                while let Some(Ok(mut chunk)) = d_stream.next().await {
+                    u_stream.write(&mut chunk).await?;
+                }
+                u_stream.flush().await?;
+                u_stream.close().await?;
+            }
+        }
     }
 
     Ok(new_track_metadata.track_id)
@@ -145,13 +172,20 @@ pub struct ExtractedTrackMetadata {
     pub album_name: String,
     pub artists: Vec<String>,
     pub album_artists: Vec<String>,
-    pub cover_art: Option<PictureOwned>,
+    pub cover_art: Option<AlbumArt>,
     pub duration: f64,
     pub format: TrackFormat,
     pub number: u16,
     pub disc_number: u16,
     pub release_date: u64,
-    pub is_explicit: bool
+    pub is_explicit: bool,
+    pub lyrics: Option<LyricsStatus>
+}
+
+#[derive(Debug, Clone)]
+pub enum AlbumArt {
+    Bytes(PictureOwned),
+    Url(Url, MimeType)
 }
 
 #[derive(Debug, Clone)]

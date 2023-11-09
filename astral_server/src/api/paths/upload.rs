@@ -1,9 +1,10 @@
 use std::collections::hash_map::RandomState;
 use std::collections::HashSet;
-use axum::extract::{BodyStream, Path, State};
+use axum::extract::{BodyStream, Path, Query, State};
 use axum::Json;
 use futures_util::{AsyncReadExt, AsyncWriteExt, StreamExt};
 use mongodb::bson::{bson, doc};
+use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 use crate::api::AppState;
@@ -14,7 +15,7 @@ use crate::data::model::{BsonId, TrackFormat, UndefinedTrack};
 use crate::err::AstralError;
 use crate::metadata::binary::extract_metadata_from_bytes;
 use crate::metadata::classify_insert_metadata;
-use crate::metadata::musix::fetch_musixmatch_metadata;
+use crate::metadata::merged::extract_merged_metadata;
 use crate::Res;
 
 /// Uploads a track to the servers with zero metadata assigned. Returned UUID can be used to update metadata.
@@ -85,7 +86,16 @@ pub async fn upload_track(
     }))
 }
 
-/// Attempts to guess track data from audio metadata
+#[derive(Deserialize)]
+pub struct MetadataProps {
+    musix_priority: Option<bool>,
+    skip_musix: Option<bool>,
+    musix_artist_override: Option<String>,
+    musix_album_override: Option<String>,
+    musix_name_override: Option<String>
+}
+
+/// Attempts to guess track data from audio metadata and musixmatch metadata
 #[utoipa::path(
     post,
     path = "/upload/guess_metadata/{uuid}",
@@ -95,12 +105,19 @@ pub async fn upload_track(
     ),
     params(
         ("uuid" = Uuid, Path, description = "UUID of the track to use for metadata guessing"),
+        ("musix_priority" = bool, Query, description = "Whether to prioritize Musixmatch metadata over bundled metadaata"),
+        ("skip_musix" = bool, Query, description = "Whether to fully skip Musixmatch metadata fetching"),
+        ("musix_artist_override" = String, Query, description = "Custom override for track artist when fetching Musixmatch"),
+        ("musix_album_override" = String, Query, description = "Custom override for track album when fetching Musixmatch"),
+        ("musix_name_override" = String, Query, description = "Custom override for track name when fetching Musixmatch"),
+
     ),
     tag = "upload"
 )]
 pub async fn guess_metadata(
     State(AppState { db, .. }): State<AppState>,
     Path(track_id): Path<Uuid>,
+    Query(MetadataProps { musix_priority, skip_musix, musix_album_override, musix_artist_override, musix_name_override }): Query<MetadataProps>,
     AuthenticatedUser(_): AuthenticatedUser,
 ) -> Res<Json<TrackMetadataResponse>> {
     let uid = BsonId::from_uuid_1(track_id);
@@ -112,7 +129,11 @@ pub async fn guess_metadata(
     stream.read_to_end(&mut track_audio_bytes).await?;
     drop(stream);
 
-    let extracted = extract_metadata_from_bytes(&track_audio_bytes, track.format)?;
+    let extracted = if skip_musix.unwrap_or(false) {
+        extract_metadata_from_bytes(&track_audio_bytes, track.format)?
+    } else {
+        extract_merged_metadata(&track_audio_bytes, track.format, musix_priority.unwrap_or(false), musix_artist_override, musix_album_override, musix_name_override).await?
+    };
     drop(track_audio_bytes);
 
     db.undefined_tracks.delete_one(doc! { "track_id": &uid }, None).await?;
@@ -120,33 +141,6 @@ pub async fn guess_metadata(
     let uid = classify_insert_metadata(&db, extracted, BsonId::new()).await?;
 
     let metadata = extract_track_metadata(&db, uid.clone()).await?;
-
-    Ok(Json(TrackMetadataResponse {
-        track_id: uid.to_uuid_1(),
-        metadata
-    }))
-}
-
-pub async fn fetch_metadata(
-    State(AppState { db, .. }): State<AppState>,
-    Path(track_id): Path<Uuid>,
-    AuthenticatedUser(_): AuthenticatedUser,
-    Json(FetchMusixmatchMetadata { artist, title, album }): Json<FetchMusixmatchMetadata>
-) -> Res<Json<TrackMetadataResponse>> {
-    let uid = BsonId::from_uuid_1(track_id);
-    // checking if the track space is actually reserved
-    let track = db.undefined_tracks.find_one(doc! {"track_id": &uid }, None).await?
-        .ok_or_else(|| AstralError::BadRequest(String::from("Track with this UUID does not exist")))?;
-
-    let new_uid = BsonId::new();
-
-    let extracted = fetch_musixmatch_metadata(track.format, title, artist, album, None).await?;
-
-    db.undefined_tracks.delete_one(doc! { "track_id": &uid }, None).await?;
-
-    let uid = classify_insert_metadata(&db, extracted, new_uid).await?;
-
-    let metadata = extract_track_metadata(&db,  uid.clone()).await?;
 
     Ok(Json(TrackMetadataResponse {
         track_id: uid.to_uuid_1(),

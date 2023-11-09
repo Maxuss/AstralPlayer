@@ -12,6 +12,7 @@ use crate::api::extensions::AuthenticatedUser;
 use crate::api::model::LyricsResponse;
 use crate::data::model::{BsonId, LyricsStatus, SyncedLyricLine, TrackLyrics};
 use crate::err::AstralError;
+use crate::metadata::musix::musix_request;
 use crate::Res;
 
 pub async fn get_lyrics(
@@ -52,29 +53,7 @@ pub async fn fetch_musixmatch_lyrics(
     album: Option<String>,
     usertoken: Option<String>
 ) -> Res<LyricsStatus> {
-    const BASE_URL: &str = "https://apic-desktop.musixmatch.com/ws/1.1/macro.subtitles.get?format=json&namespace=lyrics_richsynched&subtitle_format=mxm&app_id=web-desktop-app-v1.0";
-
-    let uri = Url::parse_with_params(BASE_URL, [
-        ("q_album", &album.unwrap_or_default()),
-        ("q_artist", &artist),
-        ("q_artists", &artist),
-        ("q_track", &title),
-        ("track_spotify_id", &String::new()),
-        ("q_duration", &String::new()),
-        ("f_subtitle_length", &String::new()),
-        ("usertoken", &usertoken.unwrap_or("2005218b74f939209bda92cb633c7380612e14cb7fe92dcd6a780f".to_string()))
-    ]).unwrap();
-
-    let client = reqwest::Client::new();
-    let json = client.get(uri)
-        .headers(HeaderMap::from_iter([
-            (HeaderName::from_static("authority"), HeaderValue::from_static("apic-desktop.musixmatch.com")),
-            (HeaderName::from_static("cookie"), HeaderValue::from_static("x-mmm-token-guid="))
-        ]))
-        .send().await?
-        .json::<Value>().await?;
-
-    let body = &json["message"]["body"]["macro_calls"];
+    let body = musix_request(&title, &artist, &album, &usertoken).await?;
 
     let status_code = body["matcher.track.get"]["message"]["header"]["status_code"].as_i64().unwrap();
     if status_code != 200 {
@@ -92,6 +71,10 @@ pub async fn fetch_musixmatch_lyrics(
         }
     }
 
+    extract_lyrics_from_musix(&body)
+}
+
+pub fn extract_lyrics_from_musix(body: &Value) -> Res<LyricsStatus> {
     let meta = &body["matcher.track.get"]["message"]["body"];
 
     if meta["track"]["has_subtitles"].as_i64().unwrap() != 0 {
@@ -119,6 +102,7 @@ pub async fn fetch_musixmatch_lyrics(
     } else {
         Ok(LyricsStatus::NoLyrics { lines: () })
     }
+
 }
 
 #[derive(Debug, Deserialize)]

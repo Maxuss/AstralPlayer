@@ -1,7 +1,7 @@
 use std::io::Cursor;
 use audiotags::{AudioTagEdit, FlacTag, Id3v2Tag, Mp4Tag};
 use crate::data::model::TrackFormat;
-use crate::metadata::{ExtractedTrackMetadata, PictureOwned};
+use crate::metadata::{AlbumArt, ExtractedTrackMetadata, PictureOwned};
 use crate::Res;
 
 macro_rules! build_from_tag {
@@ -12,12 +12,13 @@ macro_rules! build_from_tag {
                 artists: $tag.artists().unwrap_or_default().to_vec().into_iter().map(ToString::to_string).collect(),
                 album_artists: $tag.album_artists().unwrap_or_default().to_vec().into_iter().map(ToString::to_string).collect(),
                 album_name: $tag.album_title().unwrap_or_default().to_owned(),
-                cover_art: $tag.album_cover().map(<audiotags::Picture as Into<PictureOwned>>::into),
+                cover_art: $tag.album_cover().map(<audiotags::Picture as Into<PictureOwned>>::into).map(AlbumArt::Bytes),
                 duration: $tag.duration().unwrap_or(0f64).floor(),
                 number: $tag.track_number().unwrap_or(0u16),
                 disc_number: $tag.disc_number().unwrap_or(0u16),
                 release_date: 0,
                 is_explicit: false,
+                lyrics: None,
                 $format
             };
             Ok(common_metadata.clone())

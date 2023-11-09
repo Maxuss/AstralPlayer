@@ -60,7 +60,6 @@ pub async fn start_axum() -> anyhow::Result<()> {
         // upload
         .route("/upload/track/:hint", post(upload::upload_track))
         .route("/upload/guess_metadata/:uuid", post(upload::guess_metadata))
-        .route("/upload/fetch_metadata/:uuid", post(upload::fetch_metadata))
         .route("/upload/track/:uuid/patch", patch(upload::patch_track_metadata))
         .route("/upload/album/:uuid/patch", patch(upload::patch_album_metadata))
         .route("/upload/artist/:uuid/patch", patch(upload::patch_artist_metadata))
