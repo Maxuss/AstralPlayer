@@ -9,6 +9,11 @@ use crate::metadata::{AlbumArt, ExtractedTrackMetadata};
 use crate::metadata::musix::musix_request;
 use crate::Res;
 
+/// Attempts to extract metadata from two sources at the same time:
+/// 1. Track mp3/flac/m4a metadata
+/// 2. MusixMatch services
+///
+/// It then merges these sources.
 pub async fn extract_merged_metadata(
     bytes: &[u8],
     format: TrackFormat,

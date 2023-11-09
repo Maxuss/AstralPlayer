@@ -1,9 +1,6 @@
 use axum::extract::{Path, State};
-use axum::http::HeaderMap;
 use axum::Json;
 use mongodb::bson::doc;
-use reqwest::Url;
-use reqwest::header::{HeaderName, HeaderValue};
 use serde::Deserialize;
 use serde_json::Value;
 use uuid::Uuid;
@@ -14,6 +11,20 @@ use crate::data::model::{BsonId, LyricsStatus, SyncedLyricLine, TrackLyrics};
 use crate::err::AstralError;
 use crate::metadata::musix::musix_request;
 use crate::Res;
+
+/// Fetches lyrics (internally from MusixMatch)
+#[utoipa::path(
+    get,
+    path = "/lyrics/{id}",
+    params(
+        ("id" = Uuid, Path, description = "UUID of the track to query lyrics")
+    ),
+    responses(
+        (status = 200, response = LyricsResponse),
+        (status = 400, response = AstralError)
+    ),
+    tag = "metadata"
+)]
 
 pub async fn get_lyrics(
     State(AppState { db, .. }): State<AppState>,
@@ -46,7 +57,8 @@ pub async fn get_lyrics(
     };
 }
 
-/// TODO: merge this with metadata fetching?
+/// Fetches MusixMatch lyrics specifically.
+/// This will only be called for songs that don't already have lyrics in the database
 pub async fn fetch_musixmatch_lyrics(
     title: String,
     artist: String,
@@ -74,6 +86,7 @@ pub async fn fetch_musixmatch_lyrics(
     extract_lyrics_from_musix(&body)
 }
 
+/// Extracts lyrics from MusixMatch api response body.
 pub fn extract_lyrics_from_musix(body: &Value) -> Res<LyricsStatus> {
     let meta = &body["matcher.track.get"]["message"]["body"];
 

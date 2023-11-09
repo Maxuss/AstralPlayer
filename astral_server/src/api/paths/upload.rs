@@ -9,7 +9,7 @@ use sha2::{Digest, Sha256};
 use uuid::Uuid;
 use crate::api::AppState;
 use crate::api::extensions::{AuthenticatedUser, UserPermission};
-use crate::api::model::{AlbumMetadataResponse, ArtistMetadataResponse, FetchMusixmatchMetadata, PatchAlbumMetadata, PatchArtistMetadata, PatchTrackMetadata, TrackMetadataResponse, UploadTrackResponse};
+use crate::api::model::{AlbumMetadataResponse, ArtistMetadataResponse, PatchAlbumMetadata, PatchArtistMetadata, PatchTrackMetadata, TrackMetadataResponse, UploadTrackResponse};
 use crate::api::paths::metadata::{extract_album_metadata, extract_artist_metadata, extract_track_metadata};
 use crate::data::model::{BsonId, TrackFormat, UndefinedTrack};
 use crate::err::AstralError;
@@ -101,15 +101,15 @@ pub struct MetadataProps {
     path = "/upload/guess_metadata/{uuid}",
     responses(
         (status = 400, response = AstralError),
-        (status = 200, body = TrackMetadataResponse, description = "Successfully guessed metadata from file. Use /metadata/track to view it.")
+        (status = 200, response = TrackMetadataResponse)
     ),
     params(
         ("uuid" = Uuid, Path, description = "UUID of the track to use for metadata guessing"),
-        ("musix_priority" = bool, Query, description = "Whether to prioritize Musixmatch metadata over bundled metadaata"),
-        ("skip_musix" = bool, Query, description = "Whether to fully skip Musixmatch metadata fetching"),
-        ("musix_artist_override" = String, Query, description = "Custom override for track artist when fetching Musixmatch"),
-        ("musix_album_override" = String, Query, description = "Custom override for track album when fetching Musixmatch"),
-        ("musix_name_override" = String, Query, description = "Custom override for track name when fetching Musixmatch"),
+        ("musix_priority" = inline(Option<bool>), Query, description = "Whether to prioritize Musixmatch metadata over bundled metadaata"),
+        ("skip_musix" = inline(Option<bool>), Query, description = "Whether to fully skip Musixmatch metadata fetching"),
+        ("musix_artist_override" = inline(Option<String>), Query, description = "Custom override for track artist when fetching Musixmatch"),
+        ("musix_album_override" = inline(Option<String>), Query, description = "Custom override for track album when fetching Musixmatch"),
+        ("musix_name_override" = inline(Option<String>), Query, description = "Custom override for track name when fetching Musixmatch"),
 
     ),
     tag = "upload"

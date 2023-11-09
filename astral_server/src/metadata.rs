@@ -11,6 +11,7 @@ use crate::data::AstralDatabase;
 use crate::data::model::{AlbumMetadata, ArtistMetadata, BsonId, LyricsStatus, TrackFormat, TrackLyrics, TrackMetadata};
 use crate::Res;
 
+/// Classifies extracted metadata and inserts it into the Database. Will also download/upload album cover art and lyrics if needed.
 pub async fn classify_insert_metadata(
     db: &AstralDatabase,
     metadata: ExtractedTrackMetadata,
@@ -166,31 +167,50 @@ pub async fn classify_insert_metadata(
     Ok(new_track_metadata.track_id)
 }
 
+/// Extracted metadata for a single track
 #[derive(Debug, Clone)]
 pub struct ExtractedTrackMetadata {
+    /// Track name
     pub name: String,
+    /// Name of the album
     pub album_name: String,
+    /// Artists who worked on this track
     pub artists: Vec<String>,
+    /// Artists who worked on this album
     pub album_artists: Vec<String>,
+    /// Cover art of this track's album
     pub cover_art: Option<AlbumArt>,
+    /// Duration of this track in seconds
     pub duration: f64,
+    /// Partially-mime format of this track
     pub format: TrackFormat,
+    /// Index of this track in the album
     pub number: u16,
+    /// Number of the disc this track appears on
     pub disc_number: u16,
+    /// Unix timestamp of the album release date
     pub release_date: u64,
+    /// Whether this track contains explicit lyrics
     pub is_explicit: bool,
+    /// Lyrics of this track.
     pub lyrics: Option<LyricsStatus>
 }
 
+/// Cover art of some album
 #[derive(Debug, Clone)]
 pub enum AlbumArt {
+    /// Bytes extracted from the track metadata
     Bytes(PictureOwned),
+    /// URL pointing to where this album's art is stored
     Url(Url, MimeType)
 }
 
+/// Owned bytes of album cover art
 #[derive(Debug, Clone)]
 pub struct PictureOwned {
+    /// Image body
     pub data: Vec<u8>,
+    /// Image type
     pub mime: MimeType
 }
 

@@ -1,16 +1,9 @@
-use audiotags::MimeType;
-use chrono::NaiveDateTime;
-use futures_util::{StreamExt, TryStreamExt};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::Url;
 use serde_json::Value;
-use tokio_util::compat::FuturesAsyncReadCompatExt;
-use crate::api::paths::lyrics::extract_lyrics_from_musix;
-use crate::data::model::TrackFormat;
-use crate::err::AstralError;
-use crate::metadata::{AlbumArt, ExtractedTrackMetadata};
 use crate::Res;
 
+/// Sends a request to MusixMatch api
 pub async fn musix_request(
     title: &str, artist: &str,
     album: &Option<String>, usertoken: &Option<String>
