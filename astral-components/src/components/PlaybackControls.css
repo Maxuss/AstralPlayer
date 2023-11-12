@@ -3,5 +3,13 @@
 }
 
 .outer-hover:hover .inner-hover {
-    background-color: #a78bfa
+    background-color: #a757f2;
+}
+
+.slider-pin {
+    visibility: hidden;
+}
+
+.outer-hover:hover .slider-pin {
+    visibility: visible;
 }

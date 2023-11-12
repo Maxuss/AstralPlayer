@@ -99,6 +99,15 @@ interface ProgressBarProps {
 
 export const AudioProgressBar: React.FC<ProgressBarProps> = ({ progress, moreTailwind }: ProgressBarProps) => {
     const { getPosition, duration } = useGlobalAudioPlayer()
+    const pos = getPosition()
+    const [time, setTime] = useState(["0:00", "0:00"])
+    const [vars, setVars] = useState({ "--progress-bar-transform": "0%" } as React.CSSProperties)
+
+
+    useEffect(() => {
+        setTime([formatTime(pos), formatTime(duration)])
+        setVars({ "--progress-bar-transform": `${Math.round(progress * 100)}%` } as React.CSSProperties)
+    }, [pos, duration, progress]);
 
     const formatTime = (number: number) => {
         let wholeSeconds = Math.round(number)
@@ -109,11 +118,22 @@ export const AudioProgressBar: React.FC<ProgressBarProps> = ({ progress, moreTai
 
     return (
         <div className={`flex flex-row gap-x-5`}>
-            <span className="w-[3%] text-zinc-400 text-sm">{formatTime(getPosition())}</span>
-            <div className={`w-[50rem] bg-zinc-600 rounded-full h-1 mb-4 outer-hover mt-2 ${moreTailwind}`}>
-                <div className={`bg-zinc-50 h-1 rounded-full inner-hover`} style={{ width: `${Math.round(progress * 100)}%` }}></div>
+            <span className="w-[3%] text-zinc-400 text-sm">{time[0]}</span>
+            <div
+                onClick={handlePlaybarClick}
+                className={`bg-zinc-600 rounded-full relative   h-1 mb-4 w-[100%] outer-hover mt-2 ${moreTailwind}`}
+                style={vars}>
+                <div className={`bg-zinc-50 h-1 rounded-full inner-hover`} style={{ width: `var(--progress-bar-transform)` }}></div>
+                <div className={"slider-pin h-[12px] w-[12px] shadow-black shadow mt-[-8px] rounded-[50%] ml-[-6px] bg-zinc-100 z-[100] absolute left-[var(--progress-bar-transform)]"}></div>
             </div>
-            <span className="text-zinc-400 text-sm">{formatTime(duration)}</span>
+            <span className="text-zinc-400 text-sm">{time[1]}</span>
         </div>
     )
+}
+
+function handlePlaybarClick(e: React.MouseEvent<HTMLDivElement>) {
+    const bounds = e.target.getBoundingClientRect();
+    const x = e.clientX - bounds.left;
+    const progress = x / bounds.width;
+    console.log(progress)
 }
