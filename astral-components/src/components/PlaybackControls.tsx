@@ -160,11 +160,11 @@ export const AudioProgressBar: React.FC<ProgressBarProps> = ({ moreTailwind }: P
                     setProgressUpdating(true)
                     handleMove(e as unknown as PointerEvent)
                 }}
-                className={`bg-zinc-600 rounded-full relative h-1 mb-4 w-[100%] outer-hover mt-2 ${moreTailwind}`}
+                className={`bg-zinc-600 rounded-full relative h-[5px] mb-4 w-[100%] outer-hover mt-2 ${moreTailwind}`}
                 style={vars}
                 ref={parentElement}
             >
-                <div className={`bg-zinc-50 h-1 rounded-full inner-hover`} style={{ width: `var(--progress-bar-transform)` }}></div>
+                <div className={`bg-zinc-50 h-[5px] rounded-full inner-hover`} style={{ width: `var(--progress-bar-transform)` }}></div>
                 <div className={"slider-pin h-[12px] w-[12px] shadow-black shadow mt-[-8px] rounded-[50%] ml-[-6px] bg-zinc-100 z-[100] absolute left-[var(--progress-bar-transform)]"}></div>
             </div>
             <span className="text-zinc-400 text-sm select-none">{time[1]}</span>
