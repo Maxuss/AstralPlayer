@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 :root {
-    font-family: 'Outfit';
+    font-family: 'Outfit', sans-serif;
 }
 
 .fullscreen {
@@ -16,5 +16,11 @@
     right: 0;
     overflow: auto;
     background: lime; /* Just to visualize the extent */
+}
 
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-collapse: collapse;
 }
