@@ -60,10 +60,10 @@ export const AudioBar = () => {
 
     useEffect(() => {
         let pos = progressUpdating ? intermediatePosition : progress;
-        pos = Number.isNaN(pos) || !    Number.isFinite(pos) ? 0 : pos;
+        pos = Number.isNaN(pos) || !Number.isFinite(pos) ? 0 : pos;
 
         setVars({ "--progress-bar-transform": `${pos * 100}%` } as React.CSSProperties)
-    }, [getPosition, duration, progress, intermediatePosition, progressUpdating]);
+    }, [getPosition, duration, progress, intermediatePosition]);
 
     const handleMove = (e: PointerEvent) => {
         const bounds = parentElement.current?.getBoundingClientRect();

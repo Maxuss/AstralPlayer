@@ -27,7 +27,8 @@ export const VolumeBar = () => {
             return
         const x = Math.min((e.clientX - bounds.left), bounds.width);
         const newVolume = Math.max(0, x / bounds.width);
-        setVolume(newVolume)
+        const clampedVolume = newVolume < 0.03 ? 0 : newVolume > 0.97 ? 1 : newVolume;
+        setVolume(clampedVolume)
     }
 
     useEffect(() => {

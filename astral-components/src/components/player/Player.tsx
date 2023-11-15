@@ -16,7 +16,7 @@ export const Player = () => {
     return (<div
         style={{
             boxShadow: `0 40px 150px 0 ${state.data.vibrant || "#aa7cf4"}63`,
-            transition: `box-shadow 1s ease-in, --pColor 1s ease`,
+            transition: `box-shadow 2s cubic-bezier(0.44, 0.31, 0.15, 0.94)`,
         } as React.CSSProperties}
         className={`w-[95%] ml-[3rem] mb-5 bg-zinc-950 rounded-lg h-[10%] bottom-0 absolute items-center flex flex-row`}
     >
