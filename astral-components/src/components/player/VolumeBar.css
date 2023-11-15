@@ -1,0 +1,15 @@
+.volume-inner-hover {
+    background-color: #f4f4f5
+}
+
+.volume-outer-hover:hover .volume-inner-hover {
+    background-color: #d9b5fc;
+}
+
+.volume-pin {
+    visibility: hidden;
+}
+
+.volume-outer-hover:hover .volume-pin {
+    visibility: visible;
+}

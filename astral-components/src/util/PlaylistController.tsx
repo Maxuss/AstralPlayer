@@ -40,16 +40,20 @@ export interface QueuedTrack {
 const useInitializePlaylistController: () => PlaylistController = () => {
     const [isShuffle, setShuffle] = useState(false)
     const [repeat, setRepeat] = useState<RepeatingKind>('disabled')
+    const [volumeState, setVolumeState] = useState(1)
 
-    const { seek, getPosition, load, togglePlayPause, volume, setVolume, stop, duration, playing } = useGlobalAudioPlayer()
+    const { seek, getPosition, load, togglePlayPause, setVolume, stop, duration, playing } = useGlobalAudioPlayer()
 
     const queue = useRef<QueuedTrack[]>([])
     const [currentTrack, setCurrentTrack] = useState(-1)
 
     return {
         toggle: togglePlayPause,
-        setVolume: setVolume,
-        volume: volume,
+        setVolume: vol => {
+            setVolumeState(vol)
+            setVolume(vol)
+        },
+        volume: volumeState,
         next: () => {
             let newTrack = currentTrack;
             if(repeat === "single") {
@@ -64,7 +68,7 @@ const useInitializePlaylistController: () => PlaylistController = () => {
                     stop()
                     return
                 } else {
-                    newTrack = Math.min(0, currentTrack % queueLen)
+                    newTrack = Math.max(0, (currentTrack + 1) % queueLen)
                     setCurrentTrack(newTrack)
                 }
             } else {
@@ -88,8 +92,10 @@ const useInitializePlaylistController: () => PlaylistController = () => {
             load(
                 track.streamUrl,
                 {
+                    initialVolume: volumeState,
                     autoplay: true,
-                    format: track.format
+                    format: track.format,
+                    html5: true,
                 }
             )
         },
@@ -116,8 +122,10 @@ const useInitializePlaylistController: () => PlaylistController = () => {
                         load(
                             track.streamUrl,
                             {
-                                // autoplay: true,
-                                format: track.format
+                                autoplay: true,
+                                format: track.format,
+                                html5: true,
+                                initialVolume: volumeState
                             }
                         )
                     }

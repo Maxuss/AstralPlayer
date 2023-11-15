@@ -2,29 +2,33 @@ import {PlaybackControls} from "./PlaybackControls.tsx";
 import {usePlaylistController} from "../../util/PlaylistController.tsx";
 import {TrackDisplay} from "./TrackDisplay.tsx";
 import {usePalette} from "react-palette";
-import {useEffect} from "react";
+import React from "react";
+import {AudioBar} from "./AudioBar.tsx";
+import './AudioBar.css'
+import {VolumeBar} from "./VolumeBar.tsx";
 
 export const Player = () => {
     const { currentTrack } = usePlaylistController();
     const coverUrl = currentTrack()?.coverUrl;
     const state = usePalette(coverUrl === undefined ? "" : coverUrl)
 
-    useEffect(() => {
-        console.log(state)
-    }, [state]);
-
     /// The player bar
     return (<div
         style={{
-            backgroundImage: `linear-gradient(to right, ${state.data.darkMuted}, transparent 20%)`
-        }}
-        className={`w-[100%] bg-zinc-950 rounded-t-lg h-[10%] bottom-0 absolute ml-0 items-center flex flex-row`}
+            boxShadow: `0 40px 150px 0 ${state.data.vibrant || "#aa7cf4"}63`,
+            transition: `box-shadow 1s ease-in, --pColor 1s ease`,
+        } as React.CSSProperties}
+        className={`w-[95%] ml-[3rem] mb-5 bg-zinc-950 rounded-lg h-[10%] bottom-0 absolute items-center flex flex-row`}
     >
-        <div className={"m-5 w-[15%]"}>
+        <AudioBar />
+        <div className={"ml-5 mr-0 w-[20%]"}>
             <TrackDisplay track={currentTrack()} />
         </div>
-        <div className={"m-auto w-[60%] mb-0"}>
+        <div className={"m-auto w-fit mb-0 pb-0 h-[50%]"}>
             <PlaybackControls />
+        </div>
+        <div className={"mr-5 mx-auto w-[10%]"}>
+            <VolumeBar />
         </div>
     </div>)
 }

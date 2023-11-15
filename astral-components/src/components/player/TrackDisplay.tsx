@@ -8,7 +8,7 @@ export interface DisplayProps {
 export const TrackDisplay: React.FC<DisplayProps> = ({ track }) => {
     if(track === undefined) {
         return (
-            <div className={"animate-pulse flex items-center"}>
+            <div className={"animate-pulse flex items-center select-none"}>
                 <div className={"w-[4rem] h-[4rem] rounded-lg bg-violet-300"}></div>
                 <div className={"flex flex-col"}>
                     <div className={"w-[8rem] h-[0.6em] rounded-xl bg-violet-200 ml-2"}></div>
@@ -18,7 +18,7 @@ export const TrackDisplay: React.FC<DisplayProps> = ({ track }) => {
         )
     } else {
         return (
-            <div className={"flex items-center"}>
+            <div className={"flex items-center select-none"}>
                 <img className={"shadow-zinc-900 shadow-sm w-[4rem] h-[4rem] rounded-md"} src={track.coverUrl} alt={`Cover art for ${track.album} by ${track.artist}`} />
                 <div className={"flex flex-col"}>
                     <p className={"h-2 rounded-xl text-violet-100 ml-2 text-md cursor-pointer select-none"}>
