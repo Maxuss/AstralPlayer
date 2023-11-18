@@ -3,6 +3,29 @@ import {useGlobalAudioPlayer} from "react-use-audio-player";
 import {usePlaylistController} from "../../util/PlaylistController.tsx";
 import './AudioBar.css'
 
+export function useAbsoluteAudioTime() {
+    const frameRef = useRef<number>()
+    const [pos, setPos] = useState(0)
+    const { getPosition, duration } = useGlobalAudioPlayer()
+
+    useEffect(() => {
+        const animate = () => {
+            setPos(getPosition())
+            frameRef.current = requestAnimationFrame(animate)
+        }
+
+        frameRef.current = window.requestAnimationFrame(animate)
+
+        return () => {
+            if (frameRef.current) {
+                cancelAnimationFrame(frameRef.current)
+            }
+        }
+    }, [getPosition, duration])
+
+    return pos;
+}
+
 function useRelativeAudioTime() {
     const frameRef = useRef<number>()
     const [pos, setPos] = useState(0)

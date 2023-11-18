@@ -6,6 +6,7 @@ import React from "react";
 import {AudioBar} from "./AudioBar.tsx";
 import './AudioBar.css'
 import {VolumeBar} from "./VolumeBar.tsx";
+import {TimeDisplay} from "./TimeDisplay.tsx";
 
 export const Player = () => {
     const { currentTrack } = usePlaylistController();
@@ -29,6 +30,7 @@ export const Player = () => {
         </div>
         <div className={"mr-5 mx-auto w-[10%]"}>
             <VolumeBar />
+            <TimeDisplay />
         </div>
     </div>)
 }
