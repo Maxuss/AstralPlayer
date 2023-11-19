@@ -5,6 +5,8 @@ use axum::extract::State;
 use axum::headers::Authorization;
 use axum::headers::authorization::Bearer;
 use axum::{Json, TypedHeader};
+use axum_extra::extract::cookie::Cookie;
+use axum_extra::extract::CookieJar;
 use chrono::Utc;
 use mongodb::bson::doc;
 use crate::api::AppState;
@@ -71,14 +73,22 @@ pub async fn register_with_token(
 #[axum_macros::debug_handler]
 pub async fn login(
     State(AppState { db, paseto_key }): State<AppState>,
-    Json(req): Json<AuthenticationRequest>
-) -> Res<String> {
+    jar: CookieJar,
+    Json(req): Json<AuthenticationRequest>,
+) -> Res<(CookieJar, String)> {
     let user = db.accounts.find_one(doc! { "username": &req.username }, None).await?
         .ok_or_else(|| AstralError::BadRequest(String::from("Invalid username. Couldn't find a user with this username.")))?;
     if !validate_password(req.password, user.password_hash) {
         return Err(AstralError::Unauthorized(String::from("Invalid password or username.")))
     }
-    Ok(create_user_refresh_key(&paseto_key, user.user_id.to_uuid_1())?)
+    let key = create_user_refresh_key(&paseto_key, user.user_id.to_uuid_1())?;
+    let mut cookie = Cookie::new("refresh-token", key.clone());
+    cookie.set_path("/");
+
+    Ok((
+        jar.add(cookie),
+        key
+    ))
 }
 
 /// Obtains access token from refresh token
@@ -97,10 +107,15 @@ pub async fn login(
 #[axum_macros::debug_handler]
 pub async fn obtain_access_token(
     State(AppState { paseto_key, .. }): State<AppState>,
-    TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>
-) -> Res<String> {
+    TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
+    jar: CookieJar,
+) -> Res<(CookieJar, String)> {
     let uid = validate_key(&paseto_key, bearer.token())?;
-    Ok(create_user_access_key(&paseto_key, uid)?)
+    let key = create_user_access_key(&paseto_key, uid)?;
+
+    let mut cookie = Cookie::new("auth-token", key.clone());
+    cookie.set_path("/");
+    Ok((jar.add(cookie), key))
 }
 
 /// Hashes password with Argon2

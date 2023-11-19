@@ -92,12 +92,22 @@ pub struct InviteCode {
 }
 
 /// Type of a track format. Other track formats are currently unsupported
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum TrackFormat {
     Flac,
     M4a,
     Mp3
+}
+
+impl From<TrackFormat> for String {
+    fn from(value: TrackFormat) -> Self {
+        match value {
+            TrackFormat::Flac => String::from("audio/flac"),
+            TrackFormat::M4a => String::from("audio/mp4"),
+            TrackFormat::Mp3 => String::from("audio/mpeg")
+        }
+    }
 }
 
 /// A single track without metadata assigned yet

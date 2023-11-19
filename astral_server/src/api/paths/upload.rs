@@ -138,7 +138,7 @@ pub async fn guess_metadata(
 
     db.undefined_tracks.delete_one(doc! { "track_id": &uid }, None).await?;
 
-    let uid = classify_insert_metadata(&db, extracted, BsonId::new()).await?;
+    let uid = classify_insert_metadata(&db, extracted, uid).await?;
 
     let metadata = extract_track_metadata(&db, uid.clone()).await?;
 
@@ -342,5 +342,43 @@ pub async fn patch_artist_metadata(
         artist_id: artist_id.to_uuid_1(),
         metadata
     }))
+}
 
+#[utoipa::path(
+    post,
+    path = "/upload/cover/{uuid}",
+    request_body = BinaryFile,
+    responses(
+        (status = 400, response = AstralError),
+        (status = 200, description = "Successfully changed album cover")
+    ),
+    params(
+        ("uuid" = Uuid, Path, description = "UUID of the album"),
+    ),
+    tag = "upload"
+)]
+pub async fn change_cover(
+    State(AppState { db, .. }): State<AppState>,
+    Path(id): Path<Uuid>,
+    AuthenticatedUser(user): AuthenticatedUser,
+    mut stream: BodyStream
+) -> Res<()> {
+    if !user.permissions.contains(&UserPermission::ChangeMetadata) {
+        return Err(AstralError::Unauthorized(String::from("You are not authorized to change metadata")))
+    }
+
+    let found = db.gridfs_album_arts.find(doc! { "filename": id.to_string() }, None).await?.next().await;
+    if let Some(Ok(found)) = found {
+        db.gridfs_album_arts.delete(found.id).await?;
+    }
+
+    let mut u_stream = db.gridfs_album_arts.open_upload_stream(id.to_string(), None);
+    while let Some(Ok(chunk)) = stream.next().await {
+        u_stream.write(&chunk).await?;
+    }
+    u_stream.flush().await?;
+    u_stream.close().await?;
+
+
+    Ok(())
 }

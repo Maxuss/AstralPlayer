@@ -6,6 +6,7 @@ use std::time::Duration;
 
 use axum::extract::FromRequestParts;
 use axum::headers::authorization::{Bearer, Credentials};
+use axum::headers::{Cookie, HeaderMapExt};
 use axum::http::header::AUTHORIZATION;
 use axum::http::request::Parts;
 use mongodb::bson::doc;
@@ -18,7 +19,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::api::AppState;
-use crate::data::model::UserAccount;
+use crate::data::model::{BsonId, UserAccount};
 use crate::err::AstralError;
 
 /// Attempts to obtain PASETO secret symmetric key from local file.
@@ -101,16 +102,27 @@ impl FromRequestParts<AppState> for AuthenticatedUser {
     type Rejection = AstralError;
 
     async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self, Self::Rejection> {
-        let auth = parts.headers.get(AUTHORIZATION)
-            .ok_or_else(|| AstralError::BadRequest(String::from("Expected an authorization header for this endpoint")))?;
-        let bearer = Bearer::decode(auth)
-            .ok_or_else(|| AstralError::BadRequest(String::from("Expected bearer authorization for this endpoint")))?;
-        let token = bearer.token();
-        let uid = validate_access_key(&state.paseto_key, token)
-            .map_err(|_| AstralError::Unauthorized(String::from("Invalid access token")))?;
-        let user = state.db.accounts.find_one(doc! { "user_id": uid }, None).await?
-            .ok_or_else(|| AstralError::Unauthorized(String::from("Couldn't find a user with UUID {uid}. Invalid access token?")))?;
+        let auth = parts.headers.get(AUTHORIZATION);
+        let uid = auth.map(Bearer::decode).flatten()
+            .map(|it| validate_access_key(&state.paseto_key, it.token()).ok()).flatten()
+            .or_else(||
+                parts.headers.typed_get::<Cookie>()
+                    .map(|it|
+                        it
+                            .get("auth-token")
+                            .map(|inner| validate_access_key(&state.paseto_key, inner).ok())
+                            .flatten()
+                    )
+                    .flatten()
+            );
 
-        Ok(Self(user))
+        if let Some(uid) = uid {
+            let bson = BsonId::from_uuid_1(uid);
+            state.db.accounts.find_one(doc! { "user_id": &bson }, None).await?
+                .map(Self)
+                .ok_or_else(|| AstralError::BadRequest(String::from("Couldn't find user with this id.")))
+        } else {
+            Err(AstralError::Unauthorized(String::from("Expected bearer or cookie authorization for this endpoint")))
+        }
     }
 }

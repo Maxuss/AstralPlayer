@@ -6,3 +6,5 @@ pub mod auth;
 pub mod upload;
 /// Handles lyrics fetching for songs
 pub mod lyrics;
+/// Handles track streaming
+pub mod stream;

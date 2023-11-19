@@ -5,6 +5,7 @@ use axum::{Router, Server};
 use axum::routing::{get, patch, post};
 use pasetors::keys::SymmetricKey;
 use pasetors::version4::V4;
+use tower_http::cors::{Any, CorsLayer};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -39,6 +40,11 @@ pub async fn start_axum() -> anyhow::Result<()> {
         db,
     };
 
+    let cors = CorsLayer::new()
+        .allow_methods(Any)
+        .allow_origin(Any)
+        .allow_headers(Any);
+
     let router = Router::new()
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi())) // swagger
 
@@ -63,6 +69,12 @@ pub async fn start_axum() -> anyhow::Result<()> {
         .route("/upload/track/:uuid/patch", patch(upload::patch_track_metadata))
         .route("/upload/album/:uuid/patch", patch(upload::patch_album_metadata))
         .route("/upload/artist/:uuid/patch", patch(upload::patch_artist_metadata))
+        .route("/upload/cover/:uuid", post(upload::change_cover))
+
+        // streaming
+        .route("/stream/:uuid", get(stream::stream_track))
+        .route("/stream/:track_id/:quality", get(stream::stream_track_transcoded))
+        .layer(cors)
         .with_state(state);
 
     let address = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 8080));
