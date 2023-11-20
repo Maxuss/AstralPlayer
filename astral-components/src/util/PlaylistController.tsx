@@ -29,13 +29,19 @@ export interface PlaylistController {
 }
 
 export interface QueuedTrack {
-    coverUrl: string,
-    streamUrl: string,
     title: string,
     artist: string,
     album: string,
-    format: "mp3" | "flac"
+    format: "mp3" | "flac",
+    id: string | undefined,
 }
+
+export const coverUrl = (track: QueuedTrack | undefined): string => {
+    return `${COVER_URL}${track?.id || "-"}/cover`
+}
+
+const COVER_URL = "http://localhost:8080/metadata/track/"
+const STREAM_URL = "http://localhost:8080/stream/"
 
 const useInitializePlaylistController: () => PlaylistController = () => {
     const [isShuffle, setShuffle] = useState(false)
@@ -90,7 +96,7 @@ const useInitializePlaylistController: () => PlaylistController = () => {
             const track = queue.current[newTrack]
             stop()
             load(
-                track.streamUrl,
+                `${STREAM_URL}${track.id}`,
                 {
                     initialVolume: volumeState,
                     autoplay: true,
@@ -120,7 +126,7 @@ const useInitializePlaylistController: () => PlaylistController = () => {
                         const track = queue.current[newIdx]
                         stop()
                         load(
-                            track.streamUrl,
+                            `${STREAM_URL}${track.id}`,
                             {
                                 autoplay: true,
                                 format: track.format,

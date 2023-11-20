@@ -1,0 +1,68 @@
+.lyrics-frame {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    color: white;
+    border-radius: 1em;
+    box-shadow: 0 4px 10px rgba(0,0,0,.75), 0 8px 30px rgba(0,0,0,.5);
+    user-select: none;
+}
+
+.frame-lyrics {
+    position: relative; z-index: 10; flex-grow: 1;
+    padding: 0 2rem 2rem;
+    font-size: 2rem; overflow-y: auto;
+    color: rgba(255,255,255,0.75);
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    scrollbar-color: rgb(220, 220, 220, 0.38) transparent;
+}
+
+.frame-lyric-line {
+    filter: blur(0.08rem)
+}
+
+.frame-lyric-line-active {
+    color: white; font-size: 2.2rem;
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+    filter: unset !important; font-weight: bolder;
+    animation: glow ease-in-out 2s infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 0 #fff;
+    }
+    to {
+        text-shadow: 0 0 0 #fff;
+    }
+}
+
+.frame-bg {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; border-radius: 1em;
+    transition: background-image linear 5s;
+}
+
+.bg-color, .bg-black {
+    width: 200%; position: absolute; border-radius: 100%;
+    animation: rotate 20s linear infinite; max-width: unset;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0)
+    }
+    to {
+        transform: rotate(360deg)
+    }
+}
+
+.bg-color {
+    right: 0; top: 0; filter: blur(40px); z-index: 10; mix-blend-mode: multiply;
+}
+.bg-black {
+    left: 0; bottom: 0; filter: blur(40px); z-index: 1;
+    animation-direction: reverse; animation-duration: 15s; animation-delay: 5s;
+}

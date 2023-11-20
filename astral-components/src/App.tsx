@@ -2,13 +2,7 @@ import './App.css'
 import {AlbumCard} from "./components/AlbumCard.tsx";
 import {Player} from "./components/player/Player.tsx";
 import {usePlaylistController} from "./util/PlaylistController.tsx";
-import Track1 from "../audio/PrimoVere.flac";
-import Track2 from "../audio/BubblegumCrisis.mp3";
-import Track3 from "../audio/TheLament.mp3";
-import Track4 from "../audio/PyrettaBlaze.flac";
-import Track5 from "../audio/MentalCentralDialog.mp3";
-import Track6 from "../audio/SatansHunger.flac";
-import Track7 from "../audio/SecondHandEmbarrassment.mp3";
+import {LyricsSidebar} from "./components/lyrics/LyricsSidebar.tsx";
 
 function App() {
     const { append, next, toggle } = usePlaylistController();
@@ -29,53 +23,107 @@ function App() {
 
             <button className={"bg-red-500 absolute"} onClick={() => {
                 append({
-                    album: "Murmuüre", artist: "Murmuüre",
-                    coverUrl: "https://lastfm.freetls.fastly.net/i/u/770x0/937c42239633c3106f3299edd7c20da6.jpg",
-                    format: "flac",
-                    streamUrl: Track1,
-                    title: "Primo Vere"
+                    album: "fishmonger", artist: "underscores",
+                    format: "mp3",
+                    title: "Second hand embarrassment",
+                    id: "f40275e5-3e56-46da-aa7f-04d1e2037b3a"
                 })
                 append({
-                    album: "THE GHOST~POP TAPE", artist: "Devon Hendryx",
-                    coverUrl: "https://lastfm.freetls.fastly.net/i/u/770x0/976bf708fe0c03cfd1c17adf8f670d28.jpg",
+                    album: "All My Heroes Are Cornballs", artist: "JPEGMAFIA",
                     format: "mp3",
-                    streamUrl: Track2,
-                    title: "Bubblegum Crisis"
+                    title: "Free the Frail",
+                    id: "2c588e22-9d6a-4afd-811a-e0bc1b377a2d"
+                })
+                append({
+                    album: "1000 gecs", artist: "100 gecs",
+                    format: "flac",
+                    title: "hand crushed by a mallet",
+                    id: "b076c92d-a6dd-4daa-a17e-3fca97f361fd"
+                })
+                append({
+                    album: "volcanic bird enemy and the voiced concern", artist: "Lil Ugly Mane",
+                    format: "flac",
+                    title: "vpn",
+                    id: "de577ed8-f6b0-4a31-b047-cf36d12f6464"
                 })
                 append({
                     album: "Down Below", artist: "Tribulation",
-                    coverUrl: "https://lastfm.freetls.fastly.net/i/u/770x0/5390a5a5cbef2a585da49609fd511d70.jpg",
                     format: "mp3",
-                    streamUrl: Track3,
-                    title: "The Lament"
+                    title: "The Lament",
+                    id: "2b07ba68-d8eb-4362-8fc7-591f956a222f"
                 })
                 append({
-                    album: "World Coming Down", artist: "Type O Negative",
-                    coverUrl: "https://lastfm.freetls.fastly.net/i/u/770x0/c31e9911d92c44a7b6312ceb156bf78d.jpg",
+                    album: "Down Below", artist: "Tribulation",
+                    format: "mp3",
+                    title: "Nightbound",
+                    id: "2c9de5a4-ed99-4098-94de-385f07fdcbaf"
+                })
+                append({
+                    album: "Antagonist", artist: "Praise the Plague",
+                    format: "mp3",
+                    title: "Minatory Aeons",
+                    id: "1ef6188c-f155-41d3-8418-36dd63feeadc"
+                })
+                append({
+                    album: "Wallsocket", artist: "underscores",
                     format: "flac",
-                    streamUrl: Track4,
-                    title: "Pyretta Blaze"
-                })
-                append({
-                    album: "Konkurs", artist: "Lifelover",
-                    coverUrl: "https://lastfm.freetls.fastly.net/i/u/770x0/d2e8cc6713ee2fd861936bc0fb81deab.jpg",
-                    format: "mp3",
-                    streamUrl: Track5,
-                    title: "Mental Central Dialog"
+                    title: "Cops and robbers",
+                    id: "0b27a743-73d3-4400-b1cc-9a88031827f4"
                 })
                 append({
                     album: "Sworn to the Dark", artist: "Watain",
-                    coverUrl: "https://lastfm.freetls.fastly.net/i/u/770x0/333ee44a25a205514d4b4ccfa9e57f2b.jpg",
                     format: "flac",
-                    streamUrl: Track6,
-                    title: "Satan's Hunger"
+                    title: "Satan's Hunger",
+                    id: "b33692b4-f49f-406c-920a-14de094d63c3"
                 })
                 append({
-                    album: "fishmonger", artist: "underscores",
-                    coverUrl: "https://lastfm.freetls.fastly.net/i/u/770x0/0074590f78c850626134e0c01b3af7d1.jpg",
+                    album: "Ritual Music for the True Clochard", artist: "Urfaust",
                     format: "mp3",
-                    streamUrl: Track7,
-                    title: "Second hand embarrassment"
+                    title: "Verächtung wird einen messertragenden Schatten",
+                    id: "96be6eb0-f888-49b7-b7cb-4f91576bd438"
+                })
+                append({
+                    album: "Dariacore 2: Enter Here, Hell to the Left", artist: "c0ncernn",
+                    format: "flac",
+                    title: "...during pride month?",
+                    id: "21c30484-7d63-483d-9ad7-c6da293baf69"
+                })
+                append({
+                    album: "...", artist: "King Gizzard & The Lizard Wizard",
+                    format: "mp3",
+                    title: "Motor Spirit",
+                    id: "9cecd0d4-8a05-47fa-90ae-3c11c501bba2"
+                })
+                append({
+                    album: "OIL OF EVERY PEARL'S UNINSIDES", artist: "SOPHIE",
+                    format: "mp3",
+                    title: "Faceshopping",
+                    id: "c882b35d-79c8-4fe8-9d25-a2d83ecf549c"
+                })
+
+                append({
+                    album: "effective. Power", artist: "MIMIDEATH",
+                    format: "flac",
+                    title: "Calcium",
+                    id: "8bddae17-8c1d-4fb5-8e7a-3d10a8680772"
+                })
+                append({
+                    album: "effective. Power", artist: "MIMIDEATH",
+                    format: "flac",
+                    title: "Fucked Up in the Crib Drinkin' Doctor Bob",
+                    id: "0ea7244d-e435-4bf8-8ed9-45d58a884f8f"
+                })
+                append({
+                    album: "FOAR EVERYWUN FRUM MIMI", artist: "MIMIDEATH",
+                    format: "flac",
+                    title: "In the Yudio going #DRazy",
+                    id: "cfc43852-f03d-4853-a316-02a40cfa8f5f"
+                })
+                append({
+                    album: "FOAR EVERYWUN FRUM MIMI", artist: "MIMIDEATH",
+                    format: "flac",
+                    title: "abusive",
+                    id: "2db16d61-fb0f-412c-9baf-303413b4355f"
                 })
 
                 next()
@@ -84,6 +132,8 @@ function App() {
             }}>Add tracks to queue</button>
 
             <Player />
+
+            <LyricsSidebar />
 
         </div>
     )

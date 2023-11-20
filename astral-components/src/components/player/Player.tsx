@@ -2,6 +2,7 @@ import {PlaybackControls} from "./PlaybackControls.tsx";
 import {usePlaylistController} from "../../util/PlaylistController.tsx";
 import {TrackDisplay} from "./TrackDisplay.tsx";
 import {usePalette} from "react-palette";
+import {coverUrl} from "../../util/PlaylistController.tsx";
 import React from "react";
 import {AudioBar} from "./AudioBar.tsx";
 import './AudioBar.css'
@@ -10,8 +11,8 @@ import {TimeDisplay} from "./TimeDisplay.tsx";
 
 export const Player = () => {
     const { currentTrack } = usePlaylistController();
-    const coverUrl = currentTrack()?.coverUrl;
-    const state = usePalette(coverUrl === undefined ? "" : coverUrl)
+    const cover = coverUrl(currentTrack());
+    const state = usePalette(cover)
 
     /// The player bar
     return (<div

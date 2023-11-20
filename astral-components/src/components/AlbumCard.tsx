@@ -15,7 +15,7 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({ artUrl, name, artist }: Al
     return <div className="
     select-none cursor-pointer
     transition-all ease-linear delay-[50]
-    rounded-md min-w-[10] sm:max-w-[12rem] md:max-w-[12rem] lg:max-w-[13rem] min-h-[20] flex-col flex-grow p-2
+    rounded-md min-w-[10rem] sm:max-w-[12rem] md:max-w-[12rem] lg:max-w-[13rem] min-h-[20] flex-col flex-grow p-2
     bg-gradient-to-tl from-[#27083f] via-stone-900 to-stone-700
     bg-size-200 bg-pos-0 hover:bg-pos-100
     shadow-lg shadow-black

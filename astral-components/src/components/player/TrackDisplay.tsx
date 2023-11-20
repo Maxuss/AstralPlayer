@@ -1,4 +1,4 @@
-import {QueuedTrack} from "../../util/PlaylistController.tsx";
+import {coverUrl, QueuedTrack} from "../../util/PlaylistController.tsx";
 import React from "react";
 
 export interface DisplayProps {
@@ -19,7 +19,7 @@ export const TrackDisplay: React.FC<DisplayProps> = ({ track }) => {
     } else {
         return (
             <div className={"flex items-center select-none"}>
-                <img className={"shadow-zinc-900 shadow-sm w-[4rem] h-[4rem] rounded-md"} src={track.coverUrl} alt={`Cover art for ${track.album} by ${track.artist}`} />
+                <img className={"shadow-zinc-900 shadow-sm w-[4rem] h-[4rem] rounded-md"} src={coverUrl(track)} alt={`Cover art for ${track.album} by ${track.artist}`} />
                 <div className={"flex flex-col"}>
                     <p className={"h-2 rounded-xl text-violet-100 ml-2 text-md cursor-pointer select-none"}>
                         {track.title}
