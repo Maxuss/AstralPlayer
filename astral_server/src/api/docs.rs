@@ -29,7 +29,7 @@ use crate::err::AstralError;
     ),
     paths(
         get_track_metadata, get_artist_metadata, get_album_metadata, get_album_cover_art, get_track_cover_art,
-        register_with_token, login, obtain_access_token,
+        register_with_token, login, obtain_access_token, verify,
         upload_track, guess_metadata, patch_track_metadata, patch_album_metadata, patch_artist_metadata, change_cover,
         get_lyrics,
         stream_track, stream_track_transcoded

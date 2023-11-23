@@ -114,7 +114,7 @@ pub async fn get_album_metadata(
 pub async fn get_album_cover_art(
     State(AppState { db, .. }): State<AppState>,
     Path(uuid): Path<Uuid>,
-    AuthenticatedUser(_): AuthenticatedUser,
+//    AuthenticatedUser(_): AuthenticatedUser,
 ) -> Res<(TypedHeader<ContentType>, StreamBody<ReaderStream<Compat<GridFsDownloadStream>>>)> {
     let metadata = db.gridfs_album_arts.find(doc! { "filename": uuid.to_string() }, None).await?.next().await
         .ok_or_else(|| AstralError::NotFound(String::from("Couldn't find album cover for this UUID")))??.metadata;
@@ -147,7 +147,7 @@ pub async fn get_album_cover_art(
 pub async fn get_track_cover_art(
     State(AppState { db, .. }): State<AppState>,
     Path(uuid): Path<Uuid>,
-    AuthenticatedUser(_): AuthenticatedUser,
+//    AuthenticatedUser(_): AuthenticatedUser,
 ) -> Res<(TypedHeader<ContentType>, StreamBody<ReaderStream<Compat<GridFsDownloadStream>>>)> {
     let track = db.tracks_metadata.find_one(doc! { "track_id": uuid }, None).await?
         .ok_or_else(|| AstralError::NotFound(String::from("Couldn't find track with this UUID")))?;

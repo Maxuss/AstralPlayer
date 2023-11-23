@@ -62,6 +62,7 @@ pub async fn start_axum() -> anyhow::Result<()> {
         .route("/auth/register", post(auth::register_with_token))
         .route("/auth/login", post(auth::login))
         .route("/auth/token", get(auth::obtain_access_token))
+        .route("/auth/verify", post(auth::verify))
 
         // upload
         .route("/upload/track/:hint", post(upload::upload_track))

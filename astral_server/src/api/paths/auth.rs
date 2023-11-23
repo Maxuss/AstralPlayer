@@ -10,7 +10,7 @@ use axum_extra::extract::CookieJar;
 use chrono::Utc;
 use mongodb::bson::doc;
 use crate::api::AppState;
-use crate::api::extensions::{create_user_access_key, create_user_refresh_key, validate_key};
+use crate::api::extensions::{create_user_access_key, create_user_refresh_key, validate_access_key, validate_key};
 use crate::api::model::{AuthenticationRequest, AuthenticationResponse, RegisterRequest};
 use crate::data::model::{BsonId, UserAccount};
 use crate::err::AstralError;
@@ -57,6 +57,28 @@ pub async fn register_with_token(
         refresh_token: refresh_key,
         invited_by: invite_code.issued_by.to_uuid_1()
     }))
+}
+
+
+
+/// Verifies the validity of an access token
+#[utoipa::path(
+    post,
+    path = "/auth/verify",
+    request_body = String,
+    responses(
+        (status = 400, response = AstralError),
+        (status = 200, body = bool, description = "Whether the code is valid")
+    ),
+    tag = "auth"
+)]
+#[axum_macros::debug_handler]
+pub async fn verify(
+    State(AppState { paseto_key, .. }): State<AppState>,
+    body: String
+) -> Json<bool> {
+    let code = validate_key(&paseto_key, &body);
+    Json(code.is_ok())
 }
 
 /// Log in using username and password
