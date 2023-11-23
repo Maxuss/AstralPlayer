@@ -3,9 +3,17 @@ import {AlbumCard} from "./components/AlbumCard.tsx";
 import {Player} from "./components/player/Player.tsx";
 import {usePlaylistController} from "./util/PlaylistController.tsx";
 import {LyricsSidebar} from "./components/lyrics/LyricsSidebar.tsx";
+import {useBackendController} from "./util/BackendController.tsx";
+import {useEffect} from "react";
 
 function App() {
     const { append, next, toggle } = usePlaylistController();
+    const { login, loading } = useBackendController();
+
+    useEffect(() => {
+        if(!loading)
+            login("maxus", "maxus").then(() => console.log("logged in!"))
+    }, [loading]);
 
     return (
         <div className={"app-container"}>

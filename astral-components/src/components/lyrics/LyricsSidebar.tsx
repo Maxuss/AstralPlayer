@@ -1,9 +1,9 @@
-import axios from "axios";
 import {useEffect, useState} from "react";
 import {coverUrl, usePlaylistController} from "../../util/PlaylistController.tsx";
 import './LyricsSidebar.css'
 import {usePalette} from "react-palette";
 import {useAbsoluteAudioTime} from "../player/AudioBar.tsx";
+import {useBackendController} from "../../util/BackendController.tsx";
 
 export interface SyncedLyricLine {
     start_time_ms: number,
@@ -12,42 +12,20 @@ export interface SyncedLyricLine {
 
 export type LyricsData = SyncedLyricLine[] | string[] | null;
 
-async function requestLyrics(id: string): Promise<LyricsData> {
-    // TODO: this is a placeholder
-
-    const response = await axios({
-        method: 'get',
-        headers: {
-            Authorization: `Bearer ${document.cookie.split("; ").find(row => row.startsWith("auth-token="))?.split("=")[1]}`,
-        },
-        url: `http://localhost:8080/lyrics/${id}`,
-    }).catch(async (reject) => {
-        if(reject.response.status === 401) {
-            await refreshToken("v4.local.mb9WQj7Xn0RXCLEe3zCy0a-UZoUTTmxOitjWGshLGx8-zOaPRULD1DI1Ojo1B-Ot9AN3zNuZyJXVVCxu8CTIA0pHuiz2XaTY0hbzTDgcz1r-Qdu1dO-_9W5vSjKNP1fglFQtazkOcDKcWXBNZKhHSWD44i7WnTSG7sBu_pu3ci1cmNV4pOyLHpMWDbflheGLfWtN5GlpBbm38s9-cd3UnRfgZK0H6V108kF5h2nNIa3dLHyeitNa33MlbuOAyATtg-IoMy5LlRxQSBTjSyVl-1PlEjE_vdmg9ipuLB0rsFECa2o")
-            return await requestLyrics(id)
-        } else {
-            return null
-        }
-    })
-    return "data" in response! ? response.data.lines as LyricsData : response as LyricsData
-}
-
-async function refreshToken(access: string) {
-    await axios({
-        method: 'get',
-        headers: {
-            Authorization: `Bearer ${access}`,
-        },
-        url: 'http://localhost:8080/auth/token'
-    })
-}
-
 export function useLyrics(): LyricsData {
     const { currentTrack } = usePlaylistController();
+    const { get } = useBackendController();
+    const [lastFetchedTrack, setLastFetchedTrack] = useState("00000000-0000-0000-0000-000000000000")
     const [lyrics, setLyrics] = useState<LyricsData>(null);
 
     useEffect(() => {
-        requestLyrics(currentTrack()?.id || "00000000-0000-0000-0000-000000000000").then(setLyrics)
+        const id = currentTrack()?.id || "00000000-0000-0000-0000-000000000000";
+        if(lastFetchedTrack !== id)
+            get(`/lyrics/${id}`).then(response => {
+                const lyrics = response.lines as LyricsData
+                setLyrics(lyrics);
+                setLastFetchedTrack(id)
+            })
     }, [currentTrack]);
 
     return lyrics;
