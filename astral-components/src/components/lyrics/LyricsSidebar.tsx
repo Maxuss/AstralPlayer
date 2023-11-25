@@ -25,6 +25,9 @@ export function useLyrics(): LyricsData {
                 const lyrics = response.lines as LyricsData
                 setLyrics(lyrics);
                 setLastFetchedTrack(id)
+            }).catch(() => {
+                setLyrics(null)
+                setLastFetchedTrack(id)
             })
     }, [currentTrack]);
 

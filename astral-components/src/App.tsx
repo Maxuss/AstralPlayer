@@ -123,6 +123,13 @@ function App() {
                     title: "abusive",
                     id: "2db16d61-fb0f-412c-9baf-303413b4355f"
                 })
+                append({
+                    album: "さよならプリンセス", artist: "Kai",
+                    format: "mp3",
+                    title: "さよならプリンセス",
+                    id: "7e3f4daf-b514-4040-8a31-bf23e98f2871"
+                })
+
 
                 next()
                 toggle()
