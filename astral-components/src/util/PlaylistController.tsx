@@ -110,9 +110,10 @@ const useInitializePlaylistController: () => PlaylistController = () => {
                             autoplay: true,
                             format: track.format,
                             html5: true,
-                            onend: next
+                            onend: next,
                         }
                     )
+
                     return newTrack
                 }
             }

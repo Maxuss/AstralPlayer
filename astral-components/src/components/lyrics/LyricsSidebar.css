@@ -5,7 +5,6 @@
     position: relative;
     color: white;
     border-radius: 1em;
-    box-shadow: 0 4px 10px rgba(0,0,0,.75), 0 8px 30px rgba(0,0,0,.5);
     user-select: none;
 }
 
@@ -17,6 +16,17 @@
     margin-top: 0.5em;
     margin-bottom: 0.5em;
     scrollbar-color: rgb(220, 220, 220, 0.38) transparent;
+}
+
+.frame-lyrics::-webkit-scrollbar {
+    background-color: transparent;
+    width: 5px;
+    border-radius: 15px
+}
+
+.frame-lyrics::-webkit-scrollbar-thumb {
+    background-color: rgb(220, 220, 220, 0.38);
+    border-radius: 15px
 }
 
 .frame-lyric-line {

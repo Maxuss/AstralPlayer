@@ -83,15 +83,17 @@ export const LyricsSidebar = () => {
         }
     }, [position]);
 
-    return <div className={`lyrics-frame w-[25.5%] h-[49rem] mt-[1rem] left-[72%]`} style={{ backgroundColor: data?.darkVibrant || "black" }}>
+    return <div className={`lyrics-frame w-[25%] h-[85%] top-[1%] left-[74.5%]`} style={{ backgroundColor: data?.darkVibrant || "black" }}>
         <div className={"frame-lyrics"} data-id="lyrics-container">
             {
                 lyrics?.map((each, idx) =>
                     typeof each === "object" ? (
-                        <div
+                        <button
                             key={idx}
                             ms-pos={each.start_time_ms}
-                            className={`frame-lyric-line transition-all linear duration-250 motion-reduce:transition-none ${each.line === "♪" ? "mx-[45%]" : ""} ${idx === currentIdx ? "frame-lyric-line-active" : ""} cursor-pointer`}
+                            className={`frame-lyric-line 
+                            transition-all linear duration-250 motion-reduce:transition-none ${each.line === "♪" ? "mx-[45%]" : ""}
+                            ${idx === currentIdx ? "frame-lyric-line-active" : ""} cursor-pointer text-left`}
                             onClick={() => goto(each.start_time_ms / 1000)}
                             onMouseEnter={e => {
                                 e.currentTarget.style.opacity = each.start_time_ms <= position * 1000 ? "90%" : "70%"
@@ -101,7 +103,7 @@ export const LyricsSidebar = () => {
                             }}
                         >
                             {each.line}
-                        </div>
+                        </button>
                     ) : <div key={idx} className={"frame-lyric-line frame-lyric-line-active"}>{each}</div>
                 ) ?? (<div className={"mt-[50%]"} >No lyrics for this song!</div>)
             }
