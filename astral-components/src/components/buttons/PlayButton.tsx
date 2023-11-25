@@ -1,4 +1,5 @@
 import * as React from "react";
+import PauseButton from "./PauseButton.tsx";
 
 export function PlayButton(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -12,4 +13,12 @@ export function PlayButton(props: React.SVGProps<SVGSVGElement>) {
             <path d="M16 8A8 8 0 110 8a8 8 0 0116 0zM6.79 5.093A.5.5 0 006 5.5v5a.5.5 0 00.79.407l3.5-2.5a.5.5 0 000-.814l-3.5-2.5z" />
         </svg>
     );
+}
+
+export interface PlayPauseProps {
+    isPlaying: boolean,
+}
+
+export const PlayPause: React.FC<PlayPauseProps & React.SVGProps<SVGSVGElement>> = ({ isPlaying, ... props }) => {
+    return isPlaying ? <PauseButton {...props} /> : <PlayButton {...props} />
 }

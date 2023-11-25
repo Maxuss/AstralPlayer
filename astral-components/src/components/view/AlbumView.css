@@ -1,0 +1,34 @@
+.album-backdrop {
+    mask-image: linear-gradient(to top, transparent 30%, #000 55%);
+    transition: all linear 2s
+}
+
+#scrollable-wrapper {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, black var(--top-mask-size, 0), black calc(100% - var(--bottom-mask-size, 0)), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, black var(--top-mask-size, 0), black calc(100% - var(--bottom-mask-size, 0)), transparent 100%);
+    scrollbar-color: rgb(220, 220, 220, 0.38) transparent;
+}
+
+#scrollable-wrapper {
+    --top-mask-size: 0px;
+    --bottom-mask-size: 0px;
+}
+
+#scrollable-wrapper.is-top-overflowing {
+    --top-mask-size: 48px !important;
+}
+
+#scrollable-wrapper.is-bottom-overflowing {
+    --bottom-mask-size: 48px !important;
+}
+
+#scrollable-wrapper::-webkit-scrollbar-thumb {
+    background-color: rgb(220, 220, 220, 0.38);
+    border-radius: 15px
+}
+
+#scrollable-wrapper::-webkit-scrollbar {
+    background-color: transparent;
+    width: 5px;
+    border-radius: 15px
+}

@@ -1,19 +1,10 @@
-import React, {useEffect} from "react";
-import {PlayButton} from "../buttons/PlayButton.tsx";
-import PauseButton from "../buttons/PauseButton.tsx";
+import {useEffect} from "react";
+import {PlayPause} from "../buttons/PlayButton.tsx";
 import ShuffleButton from "../buttons/ShuffleButton.tsx";
 import RepeatButton from "../buttons/RepeatButton.tsx";
 import BackwardButton from "../buttons/BackwardButton.tsx";
 import ForwardButton from "../buttons/ForwardButton.tsx";
 import {usePlaylistController} from "../../util/PlaylistController.tsx";
-
-interface PlayPauseProps {
-    isPlaying: boolean,
-}
-
-const PlayPause: React.FC<PlayPauseProps & React.SVGProps<SVGSVGElement>> = ({ isPlaying, ... props }) => {
-    return isPlaying ? <PauseButton {...props} /> : <PlayButton {...props} />
-}
 
 export const PlaybackControls = () => {
     const { toggle, repeat, setRepeat, isShuffle, setShuffle, next, back, queue, isPlaying } = usePlaylistController();

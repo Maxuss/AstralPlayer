@@ -111,6 +111,7 @@ const useInitializeBackendController: (baseUrl: string) => BackendController = (
 
     return {
         get: async (url) => {
+            console.log(url)
             return await axios({
                 url: `${baseUrl}${url}`,
                 method: 'GET',
