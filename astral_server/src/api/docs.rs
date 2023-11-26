@@ -26,7 +26,7 @@ use crate::err::AstralError;
             PatchTrackMetadata, PatchArtistMetadata, PatchAlbumMetadata,
             TrackFormat, BinaryFile,
             SyncedLyricLine,
-            IndexedAlbum, IndexedArtist
+            IndexedAlbum, IndexedArtist, IndexedTrack,
         )
     ),
     paths(
@@ -35,7 +35,7 @@ use crate::err::AstralError;
         upload_track, guess_metadata, patch_track_metadata, patch_album_metadata, patch_artist_metadata, change_cover,
         get_lyrics,
         stream_track, stream_track_transcoded,
-        index_albums, index_artists,
+        index_albums, index_artists, index_tracks,
     ),
     tags(
         (name = "metadata", description = "Operations related to reading metadata"),

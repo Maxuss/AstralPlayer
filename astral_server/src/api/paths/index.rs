@@ -1,19 +1,14 @@
 use std::str::FromStr;
-use std::sync::Arc;
 use axum::extract::{Query, State};
 use axum::Json;
 use chrono::NaiveDateTime;
 use futures_util::StreamExt;
 use mongodb::bson::{doc, Document, from_bson};
-use mongodb::options::FindOptions;
 use serde::Deserialize;
-use uuid::Uuid;
 use crate::api::AppState;
 use crate::api::extensions::AuthenticatedUser;
-use crate::api::model::{AlbumMetadataResponse, FullAlbumMetadata, IndexedAlbum, IndexedArtist, MinifiedAlbumMetadata};
-use crate::api::paths::metadata::extract_album_metadata;
-use crate::data::AstralDatabase;
-use crate::data::model::{AlbumMetadata, BsonId};
+use crate::api::model::{IndexedAlbum, IndexedArtist, IndexedTrack};
+use crate::data::model::{AlbumMetadata, BsonId, TrackFormat};
 use crate::err::AstralError;
 use crate::Res;
 
@@ -40,7 +35,6 @@ pub struct IndexParameters {
     ),
     tag = "index"
 )]
-
 pub async fn index_albums(
     State(AppState { db, .. }): State<AppState>,
     Query(IndexParameters { skip, count }): Query<IndexParameters>,
@@ -109,6 +103,73 @@ pub async fn index_artists(
         .filter_map(|each| async { each.ok() });
 
     Ok(Json(mapped.collect::<Vec<_>>().await))
+}
+
+/// Fetches all albums based on the skip and count parameters
+#[utoipa::path(
+    get,
+    path = "/index/tracks",
+    params(
+        ("skip" = u32, Query, description = "Amount of track indices to skip"),
+        ("count" = u32, Query, description = "Amount of tracks to provide")
+    ),
+    responses(
+        (status = 200, body = [IndexedTrack], description = "Successfully fetched track index"),
+        (status = 400, response = AstralError)
+    ),
+    tag = "index"
+)]
+pub async fn index_tracks(
+    State(AppState { db, .. }): State<AppState>,
+    Query(IndexParameters { skip, count }): Query<IndexParameters>,
+    AuthenticatedUser(_): AuthenticatedUser
+) -> Res<Json<Vec<IndexedTrack>>> {
+    let found = db.tracks_metadata.aggregate(vec![
+        doc! { "$sort": { "name": 1, "_id": 1 } },
+        doc! { "$skip": skip },
+        doc!{ "$limit": count },
+        doc! {
+            "$lookup": {
+                "from": "artists_metadata",
+                "localField": "artists",
+                "foreignField": "artist_id",
+                "as": "artist_objects"
+            },
+        },
+        doc! {
+            "$lookup": {
+                "from": "albums_metadata",
+                "localField": "albums",
+                "foreignField": "album_id",
+                "as": "album_objects"
+            }
+        }
+    ], None).await?;
+    let mapped = found
+        .filter_map(|each| async { each.ok() })
+        .map(extract_indexed_track)
+        .filter_map(|each| async { each.ok() });
+
+    Ok(Json(mapped.collect::<Vec<_>>().await))
+}
+
+
+fn extract_indexed_track(doc: Document) -> Res<IndexedTrack> {
+    Ok(IndexedTrack {
+        id: from_bson::<BsonId>(doc.get("track_id").unwrap().to_owned())?.to_uuid_1(),
+        name: doc.get_str("name")?.to_owned(),
+        album_id: from_bson::<BsonId>(doc.get_array("albums")?.first().unwrap().to_owned())?.to_uuid_1(),
+        album_name: from_bson::<AlbumMetadata>(doc.get_array("album_objects")?.first().unwrap().to_owned()).unwrap().name,
+        artists: doc.get_array("artist_objects")?.into_iter()
+            .map(|each| each.as_document().unwrap())
+            .map(|each| (
+                from_bson::<BsonId>(each.get("artist_id").unwrap().to_owned()).unwrap().to_uuid_1(),
+                each.get_str("name").unwrap().to_owned())
+            )
+            .collect(),
+        duration: doc.get_i64("length")? as i32,
+        format: from_bson::<TrackFormat>(doc.get("format").unwrap().to_owned())?,
+    })
 }
 
 fn extract_indexed_artist(doc: Document) -> Res<IndexedArtist> {

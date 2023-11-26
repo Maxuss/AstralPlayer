@@ -126,6 +126,25 @@ pub struct IndexedArtist {
     pub name: String,
 }
 
+/// A single indexed track data
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct IndexedTrack {
+    /// UUID of the track
+    pub id: Uuid,
+    /// Name of the track
+    pub name: String,
+    /// Album UUID
+    pub album_id: Uuid,
+    /// Album name
+    pub album_name: String,
+    /// Artist UUIDs and names
+    pub artists: Vec<(Uuid, String)>,
+    /// Duration in seconds
+    pub duration: i32,
+    /// Format of this track
+    pub format: TrackFormat,
+}
+
 //#endregion
 
 //#endregion
