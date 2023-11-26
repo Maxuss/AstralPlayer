@@ -175,10 +175,13 @@ pub async fn index_tracks(
 
 fn extract_indexed_track(doc: Document, user: &UserAccount) -> Res<IndexedTrack> {
     let id = from_bson::<BsonId>(doc.get("track_id").unwrap().to_owned())?;
+    if doc.get_array("albums").unwrap().is_empty() {
+        return Err(AstralError::NotFound("Invalid track data".to_owned()))
+    }
     Ok(IndexedTrack {
         id: id.to_uuid_1(),
         name: doc.get_str("name")?.to_owned(),
-        album_id: from_bson::<BsonId>(doc.get_array("albums")?.first().unwrap().to_owned())?.to_uuid_1(),
+        album_id: from_bson::<Vec<BsonId>>(doc.get("albums").unwrap().to_owned())?.first().unwrap().to_uuid_1(),
         album_name: from_bson::<AlbumMetadata>(doc.get_array("album_objects")?.first().unwrap().to_owned()).unwrap().name,
         artists: doc.get_array("artist_objects")?.into_iter()
             .map(|each| each.as_document().unwrap())
