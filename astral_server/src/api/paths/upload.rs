@@ -130,7 +130,16 @@ pub async fn guess_metadata(
     drop(stream);
 
     let extracted = if skip_musix.unwrap_or(false) {
-        extract_metadata_from_bytes(&track_audio_bytes, track.format)?
+        let mut extracted = extract_metadata_from_bytes(&track_audio_bytes, track.format)?;
+        if(musix_priority.unwrap_or(false)) {
+            extracted.artists = musix_artist_override.clone().map(|it| it.split(", ").map(String::from).collect::<Vec<_>>()).unwrap_or(extracted.artists);
+            extracted.album_artists = musix_artist_override.map(|it| it.split(", ").map(String::from).collect::<Vec<_>>()).unwrap_or(extracted.album_artists);
+            extracted.name = musix_name_override.unwrap_or(extracted.name);
+            extracted.album_name = musix_album_override.unwrap_or(extracted.album_name);
+            extracted
+        } else {
+            extracted
+        }
     } else {
         extract_merged_metadata(&track_audio_bytes, track.format, musix_priority.unwrap_or(false), musix_artist_override, musix_album_override, musix_name_override).await?
     };
