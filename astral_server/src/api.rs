@@ -2,7 +2,7 @@ use std::env;
 use std::net::{Ipv4Addr, SocketAddr};
 
 use axum::{Router, Server};
-use axum::http::header::AUTHORIZATION;
+use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use axum::routing::{get, patch, post};
 use pasetors::keys::SymmetricKey;
 use pasetors::version4::V4;
@@ -44,7 +44,7 @@ pub async fn start_axum() -> anyhow::Result<()> {
     let cors = CorsLayer::new()
         .allow_methods(Any)
         .allow_origin(Any)
-        .allow_headers([AUTHORIZATION]);
+        .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
 
     let router = Router::new()
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi())) // swagger
