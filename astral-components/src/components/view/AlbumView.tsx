@@ -135,7 +135,7 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
                 <div id={"scrollable-wrapper"} onScroll={e => {
                     const el = e.currentTarget;
                     setClasses(el);
-                }} className={"is-bottom-overflowing flex flex-col mt-10 py-2 w-[40rem] gap-1 max-h-[70%] overflow-y-scroll"}>
+                }} className={"is-bottom-overflowing flex flex-col mt-10 py-2 w-[40rem] gap-1 max-h-[30rem] overflow-y-scroll"}>
                     {
                         albumData?.tracks.sort().map(each => (
                             <AlbumTrack key={each.index} data={each} album={albumData?.name || ""}/>

@@ -1,11 +1,16 @@
 import SearchIcon from "../icons/SearchIcon.tsx";
 import './Searchbar.css'
+import React from "react";
 
-export const Searchbar = () => {
+export interface SearchbarProps {
+    setSearch: (s: string) => void
+}
+
+export const Searchbar: React.FC<SearchbarProps> = ({ setSearch }) => {
     return <span className={"flex flex-row gap-5 mt-2"}>
-        <SearchIcon className={"scale-[150%] ml-3 mt-3 fill-zinc-300"} />
+        <SearchIcon className={"scale-[150%] ml-5 mt-3 fill-zinc-300"} />
 
-        <input type={"text"} className={"searchbar bg-gradient-to-r from-zinc-800 to-transparent rounded-xl"} placeholder={"Search for song, artists, etc."} />
+        <input type={"text"} onInput={e => setSearch(e.target.value)} className={"searchbar bg-gradient-to-r from-zinc-800 to-transparent rounded-xl"} placeholder={"Search for song, artists, etc."} />
 
         <div className={"flex flex-row absolute right-9 gap-2 select-none"}>
             <img src={"https://cdn.discordapp.com/avatars/381827687775207424/b8259800be4529e43408f6b340e08728?size=1024"} className={"w-8 h-8 rounded-full"} alt={"User avatar"} />

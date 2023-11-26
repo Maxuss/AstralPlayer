@@ -31,5 +31,6 @@ export const SearchAlbumDisplay: React.FC<AlbumDisplayProps> = ({ index, setView
             <a className={"decoration-0 hover:underline"}>{cutStr(index.artists[0][1])}</a>
             &nbsp; • {index.release_date.substring(0, 4)}
         </span>
+
     </div>
 }
