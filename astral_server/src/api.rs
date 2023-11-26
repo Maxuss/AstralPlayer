@@ -82,6 +82,12 @@ pub async fn start_axum() -> anyhow::Result<()> {
         .route("/index/artists", get(index::index_artists))
         .route("/index/tracks", get(index::index_tracks))
 
+        // personal endpoints
+        .route("/user/love/track/:track", post(user::love_track))
+        .route("/user/unlove/track/:track", post(user::unlove_track))
+        .route("/user/love/album/:album", post(user::love_album))
+        .route("/user/unlove/album/:album", post(user::unlove_album))
+
         .layer(cors)
         .with_state(state);
 

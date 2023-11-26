@@ -8,7 +8,7 @@ use serde::Deserialize;
 use crate::api::AppState;
 use crate::api::extensions::AuthenticatedUser;
 use crate::api::model::{IndexedAlbum, IndexedArtist, IndexedTrack};
-use crate::data::model::{AlbumMetadata, BsonId, TrackFormat};
+use crate::data::model::{AlbumMetadata, BsonId, TrackFormat, UserAccount};
 use crate::err::AstralError;
 use crate::Res;
 
@@ -41,7 +41,7 @@ pub struct IndexParameters {
 pub async fn index_albums(
     State(AppState { db, .. }): State<AppState>,
     Query(IndexParameters { skip, count, search }): Query<IndexParameters>,
-    AuthenticatedUser(_): AuthenticatedUser
+    AuthenticatedUser(user): AuthenticatedUser
 ) -> Res<Json<Vec<IndexedAlbum>>> {
     let (first_doc, second_doc) = if let Some(search) = search {
         (doc! { "$or": [{"$text": { "$search": &search }}, { "name": { "$regex": format!("(?i){search}") } }] }, doc! { "score": {"$meta": "textScore"}, "name": 1, "_id": 1 })
@@ -68,7 +68,7 @@ pub async fn index_albums(
     ], None).await?;
     let mapped = found
         .filter_map(|each| async { each.ok() })
-        .map(extract_indexed_album)
+        .map(|each| extract_indexed_album(each, &user))
         .filter_map(|each| async { each.ok() });
 
     Ok(Json(mapped.collect::<Vec<_>>().await))
@@ -135,7 +135,7 @@ pub async fn index_artists(
 pub async fn index_tracks(
     State(AppState { db, .. }): State<AppState>,
     Query(IndexParameters { skip, count, search }): Query<IndexParameters>,
-    AuthenticatedUser(_): AuthenticatedUser
+    AuthenticatedUser(user): AuthenticatedUser
 ) -> Res<Json<Vec<IndexedTrack>>> {
     let (first_doc, second_doc) = if let Some(search) = search {
         (doc! { "$or": [{"$text": { "$search": &search }}, { "name": { "$regex": format!("(?i){search}") } }] }, doc! { "score": {"$meta": "textScore"}, "name": 1, "_id": 1 })
@@ -166,16 +166,17 @@ pub async fn index_tracks(
     ], None).await?;
     let mapped = found
         .filter_map(|each| async { each.ok() })
-        .map(extract_indexed_track)
+        .map(|each| extract_indexed_track(each, &user))
         .filter_map(|each| async { each.ok() });
 
     Ok(Json(mapped.collect::<Vec<_>>().await))
 }
 
 
-fn extract_indexed_track(doc: Document) -> Res<IndexedTrack> {
+fn extract_indexed_track(doc: Document, user: &UserAccount) -> Res<IndexedTrack> {
+    let id = from_bson::<BsonId>(doc.get("track_id").unwrap().to_owned())?;
     Ok(IndexedTrack {
-        id: from_bson::<BsonId>(doc.get("track_id").unwrap().to_owned())?.to_uuid_1(),
+        id: id.to_uuid_1(),
         name: doc.get_str("name")?.to_owned(),
         album_id: from_bson::<BsonId>(doc.get_array("albums")?.first().unwrap().to_owned())?.to_uuid_1(),
         album_name: from_bson::<AlbumMetadata>(doc.get_array("album_objects")?.first().unwrap().to_owned()).unwrap().name,
@@ -188,6 +189,7 @@ fn extract_indexed_track(doc: Document) -> Res<IndexedTrack> {
             .collect(),
         duration: doc.get_i64("length")? as i32,
         format: from_bson::<TrackFormat>(doc.get("format").unwrap().to_owned())?,
+        loved: user.loved_tracks.contains(&id),
     })
 }
 
@@ -198,9 +200,10 @@ fn extract_indexed_artist(doc: Document) -> Res<IndexedArtist> {
     })
 }
 
-fn extract_indexed_album(doc: Document) -> Res<IndexedAlbum> {
+fn extract_indexed_album(doc: Document, user: &UserAccount) -> Res<IndexedAlbum> {
+    let id = from_bson::<BsonId>(doc.get("album_id").unwrap().to_owned())?;
     Ok(IndexedAlbum {
-        id: from_bson::<BsonId>(doc.get("album_id").unwrap().to_owned())?.to_uuid_1(),
+        id: id.to_uuid_1(),
         name: doc.get_str("name")?.to_owned(),
         artists: doc.get_array("artist_objects")?.into_iter()
             .map(|each| each.as_document().unwrap())
@@ -212,5 +215,6 @@ fn extract_indexed_album(doc: Document) -> Res<IndexedAlbum> {
         tracks: from_bson::<Vec<BsonId>>(doc.get("tracks").unwrap().to_owned())?.into_iter().map(BsonId::to_uuid_1).collect(),
         release_date: NaiveDateTime::from_timestamp_millis(doc.get_i64("release_date")?).unwrap().and_utc(),
         genres: from_bson(doc.get("genres").unwrap().to_owned())?,
+        loved: user.loved_albums.contains(&id)
     })
 }

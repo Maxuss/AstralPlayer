@@ -16,7 +16,9 @@ pub struct TrackMetadataResponse {
     #[response(example = "4e4002e9-712f-405d-bb63-f48677e80522")]
     pub track_id: Uuid,
     /// The contained metadata
-    pub metadata: FullTrackMetadata
+    pub metadata: FullTrackMetadata,
+    /// Whether this track is loved by this user
+    pub loved: bool,
 }
 
 /// Aggregated response for *metadata* of a single artist.
@@ -37,7 +39,9 @@ pub struct AlbumMetadataResponse {
     #[response(example = "d156b05e-3270-4f03-bf82-1b89003c2d76")]
     pub album_id: Uuid,
     /// The contained metadata
-    pub metadata: FullAlbumMetadata
+    pub metadata: FullAlbumMetadata,
+    /// Whether this album is loved by this user
+    pub loved: bool,
 }
 
 //#endregion
@@ -114,7 +118,9 @@ pub struct IndexedAlbum {
     /// Release date of the album
     pub release_date: DateTime<Utc>,
     /// Prevalent genres of this album
-    pub genres: Vec<String>
+    pub genres: Vec<String>,
+    /// Whether this album is loved by this user
+    pub loved: bool,
 }
 
 /// A single indexed artist data
@@ -143,6 +149,8 @@ pub struct IndexedTrack {
     pub duration: i32,
     /// Format of this track
     pub format: TrackFormat,
+    /// Whether this track is loved by this user
+    pub loved: bool,
 }
 
 //#endregion

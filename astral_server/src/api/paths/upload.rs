@@ -144,7 +144,8 @@ pub async fn guess_metadata(
 
     Ok(Json(TrackMetadataResponse {
         track_id: uid.to_uuid_1(),
-        metadata
+        metadata,
+        loved: false,
     }))
 }
 
@@ -194,11 +195,12 @@ pub async fn patch_track_metadata(
     let uid = BsonId::from_uuid_1(track_id.clone());
     db.tracks_metadata.update_one(doc! { "track_id": &uid }, doc! { "$set": doc_object }, None).await?;
 
-    let metadata = extract_track_metadata(&db, uid).await?;
+    let metadata = extract_track_metadata(&db, uid.clone()).await?;
 
     Ok(Json(TrackMetadataResponse {
         track_id,
-        metadata
+        metadata,
+        loved: user.loved_albums.contains(&uid),
     }))
 }
 
@@ -279,7 +281,8 @@ pub async fn patch_album_metadata(
 
     Ok(Json(AlbumMetadataResponse {
         album_id: album_id.to_uuid_1(),
-        metadata
+        metadata,
+        loved: user.loved_albums.contains(&album_id)
     }))
 }
 

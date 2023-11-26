@@ -8,6 +8,8 @@ use super::paths::upload::*;
 use super::paths::lyrics::*;
 use super::paths::stream::*;
 use super::paths::index::*;
+use super::paths::user::*;
+
 use crate::err::AstralError;
 
 #[derive(OpenApi)]
@@ -36,6 +38,7 @@ use crate::err::AstralError;
         get_lyrics,
         stream_track, stream_track_transcoded,
         index_albums, index_artists, index_tracks,
+        love_track, unlove_track, love_album, unlove_album,
     ),
     tags(
         (name = "metadata", description = "Operations related to reading metadata"),
@@ -43,6 +46,7 @@ use crate::err::AstralError;
         (name = "upload", description = "Operations related to uploading tracks and their metadata"),
         (name = "stream", description = "Operations related to streaming track content"),
         (name = "index", description = "Operations related to indexation of albums/artists/tracks/etc."),
+        (name = "user", description = "User related and personal requests"),
     )
 )]
 pub struct ApiDoc;

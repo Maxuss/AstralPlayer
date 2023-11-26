@@ -10,7 +10,7 @@ use axum_extra::extract::CookieJar;
 use chrono::Utc;
 use mongodb::bson::doc;
 use crate::api::AppState;
-use crate::api::extensions::{create_user_access_key, create_user_refresh_key, validate_access_key, validate_key};
+use crate::api::extensions::{create_user_access_key, create_user_refresh_key, validate_key};
 use crate::api::model::{AuthenticationRequest, AuthenticationResponse, RegisterRequest};
 use crate::data::model::{BsonId, UserAccount};
 use crate::err::AstralError;
@@ -46,7 +46,9 @@ pub async fn register_with_token(
         username: req.username,
         password_hash: hash_password(req.password),
         register_date: Utc::now().timestamp_millis() as u64,
-        permissions: invite_code.permissions
+        permissions: invite_code.permissions,
+        loved_albums: vec![],
+        loved_tracks: vec![],
     };
 
     db.accounts.insert_one(&new_user, None).await?;
@@ -92,7 +94,6 @@ pub async fn verify(
     ),
     tag = "auth"
 )]
-#[axum_macros::debug_handler]
 pub async fn login(
     State(AppState { db, paseto_key }): State<AppState>,
     jar: CookieJar,

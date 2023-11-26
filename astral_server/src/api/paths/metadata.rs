@@ -34,12 +34,14 @@ use crate::Res;
 pub async fn get_track_metadata(
     State(AppState { db, .. }): State<AppState>,
     Path(uuid): Path<Uuid>,
-    AuthenticatedUser(_): AuthenticatedUser
+    AuthenticatedUser(user): AuthenticatedUser
 ) -> Res<Json<TrackMetadataResponse>> {
-    let metadata = extract_track_metadata(&db, BsonId::from_uuid_1(uuid.clone())).await?;
+    let bid = BsonId::from_uuid_1(uuid.clone());
+    let metadata = extract_track_metadata(&db, bid.clone()).await?;
     Ok(Json(TrackMetadataResponse {
         track_id: uuid,
-        metadata
+        metadata,
+        loved: user.loved_tracks.contains(&bid)
     }))
 }
 
@@ -87,13 +89,15 @@ pub async fn get_artist_metadata(
 pub async fn get_album_metadata(
     State(AppState { db, .. }): State<AppState>,
     Path(uuid): Path<Uuid>,
-    AuthenticatedUser(_): AuthenticatedUser
+    AuthenticatedUser(user): AuthenticatedUser
 ) -> Res<Json<AlbumMetadataResponse>> {
-    let metadata = extract_album_metadata(&db, BsonId::from_uuid_1(uuid.clone())).await?;
+    let bid = BsonId::from_uuid_1(uuid.clone());
+    let metadata = extract_album_metadata(&db, bid.clone()).await?;
     Ok(Json(
         AlbumMetadataResponse {
             album_id: uuid,
-            metadata
+            metadata,
+            loved: user.loved_albums.contains(&bid)
         }
     ))
 }

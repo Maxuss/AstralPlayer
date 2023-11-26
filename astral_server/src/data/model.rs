@@ -75,7 +75,11 @@ pub struct UserAccount {
     /// Milliseconds unix timestamp for the register date
     pub register_date: u64,
     /// Permissions granted to this user
-    pub permissions: Vec<UserPermission>
+    pub permissions: Vec<UserPermission>,
+    /// List of tracks loved by this user
+    pub loved_tracks: Vec<BsonId>,
+    /// List of albums loved by this user
+    pub loved_albums: Vec<BsonId>,
 }
 
 /// A single invite code record

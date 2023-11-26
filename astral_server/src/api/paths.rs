@@ -10,3 +10,5 @@ pub mod lyrics;
 pub mod stream;
 /// Handles indexation and discovery
 pub mod index;
+/// User account related and other personal methods
+pub mod user;
