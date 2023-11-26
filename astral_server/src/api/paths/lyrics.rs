@@ -76,12 +76,13 @@ pub async fn fetch_musixmatch_lyrics(
         }
     }
 
-    let meta = &body["track.lyrics.get"]["message"]["body"];
-    if meta.is_object() {
-        if meta["lyrics"]["restricted"].as_i64().unwrap() != 0 {
-            return Err(AstralError::BadRequest(String::from("Lyrics for this track are restricted.")))
-        }
-    }
+    // is it really necessary?
+    //let meta = &body["track.lyrics.get"]["message"]["body"];
+    //if meta.is_object() {
+    //    if meta["lyrics"]["restricted"].as_i64().unwrap() != 0 {
+    //        return Err(AstralError::BadRequest(String::from("Lyrics for this track are restricted.")))
+    //    }
+    //}
 
     extract_lyrics_from_musix(&body)
 }

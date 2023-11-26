@@ -98,6 +98,27 @@ pub enum LyricsResponse {
 
 //#endregion
 
+//#region Indexation + Search
+
+/// A single indexed album data
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct IndexedAlbum {
+    /// UUID of the album
+    pub id: Uuid,
+    /// Name of the album
+    pub name: String,
+    /// Vec of pairs of artist ID to artist name
+    pub artists: Vec<(Uuid, String)>,
+    /// Vec of track ids in this album
+    pub tracks: Vec<Uuid>,
+    /// Release date of the album
+    pub release_date: DateTime<Utc>,
+    /// Prevalent genres of this album
+    pub genres: Vec<String>
+}
+
+//#endregion
+
 //#endregion
 
 //#region Requests

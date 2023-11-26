@@ -8,3 +8,5 @@ pub mod upload;
 pub mod lyrics;
 /// Handles track streaming
 pub mod stream;
+/// Handles indexation and discovery
+pub mod index;

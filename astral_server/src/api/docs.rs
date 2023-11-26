@@ -7,6 +7,7 @@ use super::paths::auth::*;
 use super::paths::upload::*;
 use super::paths::lyrics::*;
 use super::paths::stream::*;
+use super::paths::index::*;
 use crate::err::AstralError;
 
 #[derive(OpenApi)]
@@ -25,6 +26,7 @@ use crate::err::AstralError;
             PatchTrackMetadata, PatchArtistMetadata, PatchAlbumMetadata,
             TrackFormat, BinaryFile,
             SyncedLyricLine,
+            IndexedAlbum,
         )
     ),
     paths(
@@ -32,13 +34,15 @@ use crate::err::AstralError;
         register_with_token, login, obtain_access_token, verify,
         upload_track, guess_metadata, patch_track_metadata, patch_album_metadata, patch_artist_metadata, change_cover,
         get_lyrics,
-        stream_track, stream_track_transcoded
+        stream_track, stream_track_transcoded,
+        index_albums,
     ),
     tags(
         (name = "metadata", description = "Operations related to reading metadata"),
         (name = "auth", description = "Operations related to authentication, authorization and account creation"),
         (name = "upload", description = "Operations related to uploading tracks and their metadata"),
-        (name = "stream", description = "Operations related to streaming track content")
+        (name = "stream", description = "Operations related to streaming track content"),
+        (name = "index", description = "Operations related to indexation of albums/artists/tracks/etc."),
     )
 )]
 pub struct ApiDoc;

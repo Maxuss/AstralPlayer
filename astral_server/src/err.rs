@@ -1,5 +1,6 @@
 use axum::Json;
 use axum::response::{IntoResponse, Response};
+use mongodb::bson::document::ValueAccessError;
 use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
 use serde_json::json;
@@ -44,6 +45,12 @@ pub enum AstralError {
     /// JSON error
     #[error("An error occurred when parsing JSON: {0}")]
     JsonError(#[from] serde_json::Error),
+    /// BSON error
+    #[error("Failed to access BSON document field: {0}")]
+    BsonDocError(#[from] ValueAccessError),
+    /// BSON deserialization error
+    #[error("Failed to deserialize data from BSON: {0}")]
+    BsonDeError(#[from] mongodb::bson::de::Error)
 }
 
 // <editor-fold defaultstate="collapsed" desc="impl macro">
@@ -109,6 +116,8 @@ error_impls! {
     M4aError: (INTERNAL_SERVER_ERROR, "m4a");
     ReqwestError: (INTERNAL_SERVER_ERROR, "reqwest");
     JsonError: (INTERNAL_SERVER_ERROR, "json");
+    BsonDocError: (INTERNAL_SERVER_ERROR, "bson");
+    BsonDeError: (INTERNAL_SERVER_ERROR, "bson_de");
 }
 
 pub type Res<T> = axum::response::Result<T, AstralError>;
