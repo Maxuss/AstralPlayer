@@ -1,4 +1,5 @@
-use mongodb::{Client, Collection, Database, GridFsBucket};
+use mongodb::{Client, Collection, Database, GridFsBucket, IndexModel};
+use mongodb::bson::doc;
 use mongodb::options::GridFsBucketOptions;
 use crate::data::model::{AlbumMetadata, ArtistMetadata, InviteCode, TrackLyrics, TrackMetadata, UndefinedTrack, UserAccount};
 
@@ -36,9 +37,20 @@ impl AstralDatabase {
         let client = Client::with_uri_str(url).await?;
         let inner = client.database("astral");
         let tracks_metadata = inner.collection("tracks_metadata");
+        tracks_metadata.create_index(IndexModel::builder().keys(doc! { "name": "text" }).build(), None).await?;
+        tracks_metadata.create_index(IndexModel::builder().keys(doc! { "name": 1 }).build(), None).await?;
+
         let artists_metadata = inner.collection("artists_metadata");
+        artists_metadata.create_index(IndexModel::builder().keys(doc! { "name": "text", "about": "text" }).build(), None).await?;
+        artists_metadata.create_index(IndexModel::builder().keys(doc! { "name": 1 }).build(), None).await?;
+
         let albums_metadata = inner.collection("albums_metadata");
+        albums_metadata.create_index(IndexModel::builder().keys(doc! { "name": "text" }).build(), None).await?;
+        albums_metadata.create_index(IndexModel::builder().keys(doc! { "name": 1 }).build(), None).await?;
+
         let accounts = inner.collection("accounts");
+        accounts.create_index(IndexModel::builder().keys(doc! { "username": 1 }).build(), None).await?;
+        
         let invite_codes = inner.collection("invite_codes");
         let undefined_tracks = inner.collection("undefined_tracks");
         let lyrics = inner.collection("lyrics");

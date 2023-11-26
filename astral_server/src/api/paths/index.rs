@@ -18,7 +18,9 @@ pub struct IndexParameters {
     /// Amount of indices to skip. Used for pagination
     pub skip: u32,
     /// Count of indices to provide
-    pub count: u32
+    pub count: u32,
+    /// Optional search query
+    pub search: Option<String>,
 }
 
 /// Fetches all albums based on the skip and count parameters
@@ -27,7 +29,8 @@ pub struct IndexParameters {
     path = "/index/albums",
     params(
         ("skip" = u32, Query, description = "Amount of album indices to skip"),
-        ("count" = u32, Query, description = "Amount of albums to provide")
+        ("count" = u32, Query, description = "Amount of albums to provide"),
+        ("search" = Option<String>, Query, description = "Optional search query"),
     ),
     responses(
         (status = 200, body = [IndexedAlbum], description = "Successfully fetched album index"),
@@ -37,13 +40,17 @@ pub struct IndexParameters {
 )]
 pub async fn index_albums(
     State(AppState { db, .. }): State<AppState>,
-    Query(IndexParameters { skip, count }): Query<IndexParameters>,
+    Query(IndexParameters { skip, count, search }): Query<IndexParameters>,
     AuthenticatedUser(_): AuthenticatedUser
 ) -> Res<Json<Vec<IndexedAlbum>>> {
+    let (first_doc, second_doc) = if let Some(search) = search {
+        (doc! { "$or": [{"$text": { "$search": &search }}, { "name": { "$regex": format!("(?i){search}") } }] }, doc! { "score": {"$meta": "textScore"}, "name": 1, "_id": 1 })
+    } else {
+        (doc! { }, doc! { "name": 1, "_id": 1 })
+    };
     let found = db.albums_metadata.aggregate(vec![
-        doc! {
-            "$sort": { "name": 1, "_id": 1 }
-        },
+        doc! { "$match": first_doc },
+        doc! { "$sort": second_doc },
         doc! {
             "$skip": skip,
         },
@@ -73,7 +80,8 @@ pub async fn index_albums(
     path = "/index/artists",
     params(
         ("skip" = u32, Query, description = "Amount of artist indices to skip"),
-        ("count" = u32, Query, description = "Amount of artists to provide")
+        ("count" = u32, Query, description = "Amount of artists to provide"),
+        ("search" = Option<String>, Query, description = "Optional search query"),
     ),
     responses(
         (status = 200, body = [IndexedArtist], description = "Successfully fetched artist index"),
@@ -83,13 +91,17 @@ pub async fn index_albums(
 )]
 pub async fn index_artists(
     State(AppState { db, .. }): State<AppState>,
-    Query(IndexParameters { skip, count }): Query<IndexParameters>,
+    Query(IndexParameters { skip, count, search }): Query<IndexParameters>,
     AuthenticatedUser(_): AuthenticatedUser
 ) -> Res<Json<Vec<IndexedArtist>>> {
+    let (first_doc, second_doc) = if let Some(search) = search {
+        (doc! { "$or": [{"$text": { "$search": &search }}, { "name": { "$regex": format!("(?i){search}") } }] }, doc! { "score": {"$meta": "textScore"}, "name": 1, "_id": 1 })
+    } else {
+        (doc! { }, doc! { "name": 1, "_id": 1 })
+    };
     let found = db.artists_metadata.aggregate(vec![
-        doc! {
-            "$sort": { "name": 1, "_id": 1 }
-        },
+        doc! { "$match": first_doc },
+        doc! { "$sort": second_doc },
         doc! {
             "$skip": skip,
         },
@@ -111,7 +123,8 @@ pub async fn index_artists(
     path = "/index/tracks",
     params(
         ("skip" = u32, Query, description = "Amount of track indices to skip"),
-        ("count" = u32, Query, description = "Amount of tracks to provide")
+        ("count" = u32, Query, description = "Amount of tracks to provide"),
+        ("search" = Option<String>, Query, description = "Optional search query"),
     ),
     responses(
         (status = 200, body = [IndexedTrack], description = "Successfully fetched track index"),
@@ -121,13 +134,19 @@ pub async fn index_artists(
 )]
 pub async fn index_tracks(
     State(AppState { db, .. }): State<AppState>,
-    Query(IndexParameters { skip, count }): Query<IndexParameters>,
+    Query(IndexParameters { skip, count, search }): Query<IndexParameters>,
     AuthenticatedUser(_): AuthenticatedUser
 ) -> Res<Json<Vec<IndexedTrack>>> {
+    let (first_doc, second_doc) = if let Some(search) = search {
+        (doc! { "$or": [{"$text": { "$search": &search }}, { "name": { "$regex": format!("(?i){search}") } }] }, doc! { "score": {"$meta": "textScore"}, "name": 1, "_id": 1 })
+    } else {
+        (doc! { }, doc! { "name": 1, "_id": 1 })
+    };
     let found = db.tracks_metadata.aggregate(vec![
-        doc! { "$sort": { "name": 1, "_id": 1 } },
+        doc! { "$match": first_doc },
+        doc! { "$sort": second_doc },
         doc! { "$skip": skip },
-        doc!{ "$limit": count },
+        doc! { "$limit": count },
         doc! {
             "$lookup": {
                 "from": "artists_metadata",
