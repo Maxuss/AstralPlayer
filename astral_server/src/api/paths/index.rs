@@ -10,7 +10,7 @@ use serde::Deserialize;
 use uuid::Uuid;
 use crate::api::AppState;
 use crate::api::extensions::AuthenticatedUser;
-use crate::api::model::{AlbumMetadataResponse, FullAlbumMetadata, IndexedAlbum, MinifiedAlbumMetadata};
+use crate::api::model::{AlbumMetadataResponse, FullAlbumMetadata, IndexedAlbum, IndexedArtist, MinifiedAlbumMetadata};
 use crate::api::paths::metadata::extract_album_metadata;
 use crate::data::AstralDatabase;
 use crate::data::model::{AlbumMetadata, BsonId};
@@ -71,6 +71,51 @@ pub async fn index_albums(
         .filter_map(|each| async { each.ok() });
 
     Ok(Json(mapped.collect::<Vec<_>>().await))
+}
+
+/// Fetches all artists based on the skip and count parameters
+#[utoipa::path(
+    get,
+    path = "/index/artists",
+    params(
+        ("skip" = u32, Query, description = "Amount of artist indices to skip"),
+        ("count" = u32, Query, description = "Amount of artists to provide")
+    ),
+    responses(
+        (status = 200, body = [IndexedArtist], description = "Successfully fetched artist index"),
+        (status = 400, response = AstralError)
+    ),
+    tag = "index"
+)]
+pub async fn index_artists(
+    State(AppState { db, .. }): State<AppState>,
+    Query(IndexParameters { skip, count }): Query<IndexParameters>,
+    AuthenticatedUser(_): AuthenticatedUser
+) -> Res<Json<Vec<IndexedArtist>>> {
+    let found = db.artists_metadata.aggregate(vec![
+        doc! {
+            "$sort": { "name": 1, "_id": 1 }
+        },
+        doc! {
+            "$skip": skip,
+        },
+        doc!{
+            "$limit": count,
+        },
+    ], None).await?;
+    let mapped = found
+        .filter_map(|each| async { each.ok() })
+        .map(extract_indexed_artist)
+        .filter_map(|each| async { each.ok() });
+
+    Ok(Json(mapped.collect::<Vec<_>>().await))
+}
+
+fn extract_indexed_artist(doc: Document) -> Res<IndexedArtist> {
+    Ok(IndexedArtist {
+        id: from_bson::<BsonId>(doc.get("artist_id").unwrap().to_owned())?.to_uuid_1(),
+        name: doc.get_str("name")?.to_owned(),
+    })
 }
 
 fn extract_indexed_album(doc: Document) -> Res<IndexedAlbum> {

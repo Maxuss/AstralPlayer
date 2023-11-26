@@ -79,6 +79,7 @@ pub async fn start_axum() -> anyhow::Result<()> {
 
         // indexation
         .route("/index/albums", get(index::index_albums))
+        .route("/index/artists", get(index::index_artists))
 
         .layer(cors)
         .with_state(state);

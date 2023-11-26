@@ -117,6 +117,15 @@ pub struct IndexedAlbum {
     pub genres: Vec<String>
 }
 
+/// A single indexed artist data
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct IndexedArtist {
+    /// UUID of the artist
+    pub id: Uuid,
+    /// Name of the artist
+    pub name: String,
+}
+
 //#endregion
 
 //#endregion
