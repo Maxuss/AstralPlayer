@@ -109,22 +109,24 @@ const useInitializeBackendController: (baseUrl: string) => BackendController = (
         })
     }
 
-    return {
-        get: async (url) => {
-            console.log(url)
-            return await axios({
-                url: `${baseUrl}${url}`,
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${await obtainAccessToken()}`
-                }
+    const get = useCallback(async (url: string) => {
+        return await axios({
+            url: `${baseUrl}${url}`,
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${await obtainAccessToken()}`
+            }
+        })
+            .then(body => body.data)
+            .catch(async error => {
+                if(error.response !== undefined)
+                    console.error(`Failed to perform a GET request to ${url} -> ${error.response.status} ("${error.response.data.error_type}": ${error.response.data.message})`);
             })
-                .then(body => body.data)
-                .catch(error => {
-                    if(error.response !== undefined)
-                        console.error(`Failed to perform a GET request to ${url} -> ${error.response.status} ("${error.response.data.error_type}": ${error.response.data.message})`);
-                })
-        },
+
+    }, [baseUrl, obtainAccessToken])
+
+    return {
+        get: get,
         post: async (url, body) => {
             return await axios({
                 url: `${baseUrl}${url}`,

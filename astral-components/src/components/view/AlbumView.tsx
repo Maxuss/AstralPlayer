@@ -84,7 +84,6 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
                 tracks: extractedTracks,
             };
             data.tracks.sort((a, b) => a.index < b.index ? -1 : a.index > b.index ? 1 : 0)
-            console.log(data)
             setAlbumData(data)
             setLastFetched(albumId);
         }).catch(err => console.error("Failed to fetch album metadata.", err))
@@ -110,11 +109,11 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
         <div className={"flex flex-row flex-grow absolute left-[10%] top-[20%] select-none"}>
             <AlbumCoverDisplay albumData={albumData!} />
             <div className={"ml-5 flex flex-col"}>
-                <span className={"flex flex-row gap-[42%] w-[100%]"}>
-                    <span className={"text-4xl font-extrabold text-zinc-100"}>
-                        {albumData?.name || "undefined"}
+                <span className={"flex flex-row w-[100%]"}>
+                    <span className={"text-5xl font-extrabold text-zinc-100 font-montserrat w-[35rem] max-h-[30rem]"}>
+                        {albumData?.name}
                     </span>
-                    <span className={"text-4xl font-extrabold text-zinc-100"}>
+                    <span className={"text-4xl mt-2 font-extrabold text-zinc-100 font-montserrat absolute right-0"}>
                         {albumData?.rymRating}
                         <span className={"text-lg"}>
                             /5

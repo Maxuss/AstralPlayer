@@ -91,7 +91,7 @@ export const LyricsSidebar = () => {
             {
                 lyrics?.map((each, idx) =>
                     typeof each === "object" ? (
-                        <button
+                        <div
                             key={idx}
                             ms-pos={each.start_time_ms}
                             className={`frame-lyric-line 
@@ -106,7 +106,7 @@ export const LyricsSidebar = () => {
                             }}
                         >
                             {each.line}
-                        </button>
+                        </div>
                     ) : <div key={idx} className={"frame-lyric-line frame-lyric-line-active"}>{each}</div>
                 ) ?? (<div className={"mt-[50%]"} >No lyrics for this song!</div>)
             }

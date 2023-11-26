@@ -20,7 +20,7 @@ export const Player = () => {
             boxShadow: `0 40px 150px 0 ${state.data.lightVibrant || "#000"}63`,
             transition: `box-shadow 2s cubic-bezier(0.44, 0.31, 0.15, 0.94)`,
         } as React.CSSProperties}
-        className={`w-[95%] left-[2.5%] mb-[1%] bg-zinc-950 rounded-lg h-[11%] bottom-0 absolute items-center flex flex-row`}
+        className={`w-[95%] left-[2.5%] bg-zinc-950 rounded-t-lg h-[11%] bottom-0 absolute items-center flex flex-row z-20`}
     >
         <AudioBar />
         <div className={"ml-5 mr-0 w-[20%]"}>

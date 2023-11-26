@@ -1,0 +1,14 @@
+.display-scroll {
+    scrollbar-color: rgb(220, 220, 220, 0.38) transparent;
+}
+
+.display-scroll::-webkit-scrollbar-thumb {
+    background-color: rgb(220, 220, 220, 0.38);
+    border-radius: 15px
+}
+
+.display-scroll::-webkit-scrollbar {
+    background-color: transparent;
+    width: 5px;
+    border-radius: 15px
+}
