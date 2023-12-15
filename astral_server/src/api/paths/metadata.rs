@@ -1,8 +1,10 @@
 use std::str::FromStr;
 use axum::extract::{Path, State};
-use axum::{Json, TypedHeader};
-use axum::body::StreamBody;
-use axum::headers::ContentType;
+use axum::{Json};
+use axum::body::Body;
+use axum::response::IntoResponse;
+use axum_extra::headers::ContentType;
+use axum_extra::TypedHeader;
 use chrono::NaiveDateTime;
 use futures_util::{StreamExt};
 use mongodb::bson::doc;
@@ -119,14 +121,14 @@ pub async fn get_album_cover_art(
     State(AppState { db, .. }): State<AppState>,
     Path(uuid): Path<Uuid>,
 //    AuthenticatedUser(_): AuthenticatedUser,
-) -> Res<(TypedHeader<ContentType>, StreamBody<ReaderStream<Compat<GridFsDownloadStream>>>)> {
+) -> Res<(TypedHeader<ContentType>, impl IntoResponse)> {
     let metadata = db.gridfs_album_arts.find(doc! { "filename": uuid.to_string() }, None).await?.next().await
         .ok_or_else(|| AstralError::NotFound(String::from("Couldn't find album cover for this UUID")))??.metadata;
     let metadata = metadata.unwrap();
     let mime_type = metadata.get("mime_type").unwrap();
     let mime_type = mime_type.as_str().unwrap();
     let download_stream = db.gridfs_album_arts.open_download_stream_by_name(uuid.to_string(), None).await?;
-    let stream_body = StreamBody::new(ReaderStream::new(download_stream.compat()));
+    let stream_body = Body::from_stream(ReaderStream::new(download_stream.compat()));
     Ok(
         (
             TypedHeader(ContentType::from_str(mime_type).unwrap()),
@@ -152,7 +154,7 @@ pub async fn get_track_cover_art(
     State(AppState { db, .. }): State<AppState>,
     Path(uuid): Path<Uuid>,
 //    AuthenticatedUser(_): AuthenticatedUser,
-) -> Res<(TypedHeader<ContentType>, StreamBody<ReaderStream<Compat<GridFsDownloadStream>>>)> {
+) -> Res<(TypedHeader<ContentType>, impl IntoResponse)> {
     let track = db.tracks_metadata.find_one(doc! { "track_id": uuid }, None).await?
         .ok_or_else(|| AstralError::NotFound(String::from("Couldn't find track with this UUID")))?;
     let album_id = track.albums.first().map(ToOwned::to_owned)
@@ -163,7 +165,7 @@ pub async fn get_track_cover_art(
     let mime_type = metadata.get("mime_type").unwrap();
     let mime_type = mime_type.as_str().unwrap();
     let download_stream = db.gridfs_album_arts.open_download_stream_by_name(album_id.to_string(), None).await?;
-    let stream_body = StreamBody::new(ReaderStream::new(download_stream.compat()));
+    let stream_body = Body::from_stream(ReaderStream::new(download_stream.compat()));
     Ok(
         (
             TypedHeader(ContentType::from_str(mime_type).unwrap()),

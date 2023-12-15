@@ -1,11 +1,12 @@
 use std::env;
 use std::net::{Ipv4Addr, SocketAddr};
 
-use axum::{Router, Server};
+use axum::{Router};
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use axum::routing::{get, patch, post};
 use pasetors::keys::SymmetricKey;
 use pasetors::version4::V4;
+use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
@@ -92,5 +93,5 @@ pub async fn start_axum() -> anyhow::Result<()> {
         .with_state(state);
 
     let address = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 8080));
-    Server::bind(&address).serve(router.into_make_service()).await.map_err(anyhow::Error::from)
+    axum::serve(TcpListener::bind(&address).await.unwrap(), router.into_make_service()).await.map_err(anyhow::Error::from)
 }

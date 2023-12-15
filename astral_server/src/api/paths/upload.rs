@@ -1,12 +1,18 @@
 use std::collections::hash_map::RandomState;
 use std::collections::HashSet;
-use axum::extract::{BodyStream, Path, Query, State};
+use std::path::PathBuf;
+use axum::extract::{Path, Query, State};
 use axum::Json;
-use futures_util::{AsyncReadExt, AsyncWriteExt, StreamExt};
+use futures_util::{AsyncReadExt as FutReadExt, AsyncWriteExt as FutWriteExt, StreamExt};
 use mongodb::bson::{bson, doc};
+use mongodb::GridFsUploadStream;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
+use tokio::fs::File;
+use tokio::io::{AsyncWriteExt, BufReader};
 use uuid::Uuid;
+use axum::body::Body;
+use tokio::io::AsyncReadExt;
 use crate::api::AppState;
 use crate::api::extensions::{AuthenticatedUser, UserPermission};
 use crate::api::model::{AlbumMetadataResponse, ArtistMetadataResponse, PatchAlbumMetadata, PatchArtistMetadata, PatchTrackMetadata, TrackMetadataResponse, UploadTrackResponse};
@@ -36,7 +42,7 @@ pub async fn upload_track(
     State(AppState { db, .. }): State<AppState>,
     Path(hint): Path<String>,
     AuthenticatedUser(user): AuthenticatedUser,
-    mut stream: BodyStream
+    mut stream: Body
 ) -> Res<Json<UploadTrackResponse>> {
     let track_format = match hint.to_lowercase().as_str() {
         "flac" => TrackFormat::Flac,
@@ -50,28 +56,24 @@ pub async fn upload_track(
     }
 
     let track_id = BsonId::new();
-    let mut connection = db.gridfs_tracks.open_upload_stream(track_id.to_string(), None);
+
     let mut hasher = Sha256::new();
-
-    while let Some(chunk) = stream.next().await {
-        if let Ok(chunk) = chunk {
-            hasher.update(&chunk);
-            connection.write(&chunk).await?;
-        } else {
-            return Err(AstralError::BadRequest(String::from("Corrupted upload stream")))
-        }
+    let path = std::path::Path::new("astral_tracks").join(format!("{track_id}.bin"));
+    let mut file = File::create(&path).await?;
+    let mut stream = stream.into_data_stream();
+    while let Some(Ok(mut chunk)) = stream.next().await {
+        file.write_all(&mut chunk).await?;
+        hasher.update(&chunk);
     }
-
     let hash = hex::encode(&hasher.finalize()[..]);
 
     if let Some(track) = db.undefined_tracks.find_one(doc! { "hash": &hash }, None).await? {
-        connection.abort().await?;
+        tokio::fs::remove_file(&path).await?;
         return Ok(Json(UploadTrackResponse {
             track_id: track.track_id.to_uuid_1(),
         }))
     }
-    connection.flush().await?;
-    connection.close().await?;
+    file.flush().await?;
 
     let new_track = UndefinedTrack {
         track_id,
@@ -125,7 +127,7 @@ pub async fn guess_metadata(
         .ok_or_else(|| AstralError::BadRequest(String::from("Track with this UUID does not exist")))?;
 
     let mut track_audio_bytes = vec![];
-    let mut stream = db.gridfs_tracks.open_download_stream_by_name(track.track_id.to_string(), None).await?;
+    let mut stream = BufReader::new(File::open(PathBuf::from("astral_tracks").join(format!("{uid}.bin"))).await?);
     stream.read_to_end(&mut track_audio_bytes).await?;
     drop(stream);
 
@@ -373,7 +375,7 @@ pub async fn change_cover(
     State(AppState { db, .. }): State<AppState>,
     Path(id): Path<Uuid>,
     AuthenticatedUser(user): AuthenticatedUser,
-    mut stream: BodyStream
+    mut stream: Body
 ) -> Res<()> {
     if !user.permissions.contains(&UserPermission::ChangeMetadata) {
         return Err(AstralError::Unauthorized(String::from("You are not authorized to change metadata")))
@@ -385,11 +387,12 @@ pub async fn change_cover(
     }
 
     let mut u_stream = db.gridfs_album_arts.open_upload_stream(id.to_string(), None);
+    let mut stream = stream.into_data_stream();
     while let Some(Ok(chunk)) = stream.next().await {
         u_stream.write(&chunk).await?;
     }
     u_stream.flush().await?;
-    u_stream.close().await?;
+    GridFsUploadStream::close(&mut u_stream).await?;
 
 
     Ok(())

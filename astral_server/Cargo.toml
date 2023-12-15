@@ -9,14 +9,16 @@ edition = "2021"
 anyhow = "1.0.75"
 argon2 = "0.5.2"
 audiotags = "0.4.1"
-axum = { version = "0.6.20", features = ["headers"] }
-axum-extra = { version = "0.8.0", features = ["cookie"] }
-axum-macros = "0.3.8"
+axum = "0.7.2"
+axum-core = "0.4.1"
+axum-extra = { version = "0.9.0", features = ["typed-header", "cookie"] }
+axum-macros = "0.4.0"
 chrono = { version = "0.4.31", features = ["serde"] }
 futures-util = "0.3.29"
 hex = "0.4.3"
 id3 = { version = "1.9.0", features = ["tokio"] }
 metaflac = "0.2.5"
+mime = "0.3.17"
 mongodb = { version = "2.7.0", features = ["bson-chrono-0_4", "bson-uuid-1"] }
 mp4ameta = "0.11.0"
 pasetors = "0.6.7"
@@ -27,7 +29,7 @@ sha2 = "0.10.8"
 thiserror = "1.0.50"
 tokio = { version = "1.33.0", features = ["macros", "rt-multi-thread"] }
 tokio-util = { version = "0.7.10", features = ["compat"] }
-tower-http = { version = "0.4.4", features = ["cors"] }
+tower-http = { version = "0.5.0", features = ["cors", "fs"], default-features = false }
 utoipa = { version = "4.0.0", features = ["uuid", "chrono"] }
-utoipa-swagger-ui = { version = "4.0.0", features = ["axum"] }
+utoipa-swagger-ui = { version = "5.0.0", features = ["axum"] }
 uuid = { version = "1.5.0", features = ["v4", "serde"] }

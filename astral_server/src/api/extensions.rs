@@ -4,11 +4,11 @@ use std::path::Path;
 use std::str::FromStr;
 use std::time::Duration;
 
-use axum::extract::FromRequestParts;
-use axum::headers::authorization::{Bearer, Credentials};
-use axum::headers::{Cookie, HeaderMapExt};
+use axum_extra::headers::authorization::{Bearer, Credentials};
+use axum_extra::headers::{Cookie, HeaderMapExt};
 use axum::http::header::AUTHORIZATION;
 use axum::http::request::Parts;
+use axum::RequestPartsExt;
 use mongodb::bson::doc;
 use pasetors::{local, Local};
 use pasetors::claims::{Claims, ClaimsValidationRules};
@@ -98,7 +98,7 @@ pub fn validate_access_key(sk: &SymmetricKey<V4>, key: &str) -> anyhow::Result<U
 pub struct AuthenticatedUser(pub UserAccount);
 
 #[axum::async_trait]
-impl FromRequestParts<AppState> for AuthenticatedUser {
+impl axum::extract::FromRequestParts<AppState> for AuthenticatedUser {
     type Rejection = AstralError;
 
     async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self, Self::Rejection> {

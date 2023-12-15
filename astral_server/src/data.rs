@@ -1,6 +1,9 @@
+use std::fs::create_dir_all;
+use std::time::Instant;
 use mongodb::{Client, Collection, Database, GridFsBucket, IndexModel};
 use mongodb::bson::doc;
 use mongodb::options::GridFsBucketOptions;
+use crate::api::extensions::UserPermission;
 use crate::data::model::{AlbumMetadata, ArtistMetadata, InviteCode, TrackLyrics, TrackMetadata, UndefinedTrack, UserAccount};
 
 /// Contains all database models
@@ -23,8 +26,6 @@ pub struct AstralDatabase {
     pub undefined_tracks: Collection<UndefinedTrack>,
     /// Track lyrics
     pub lyrics: Collection<TrackLyrics>,
-    /// GridFS bucket for all the tracks
-    pub gridfs_tracks: GridFsBucket,
     /// GridFS bucket for all the album arts
     pub gridfs_album_arts: GridFsBucket,
     /// Access to the inner database
@@ -34,6 +35,12 @@ pub struct AstralDatabase {
 impl AstralDatabase {
     /// Connects to database using MongoDB connection uri
     pub async fn connect(url: String) -> anyhow::Result<Self> {
+        // creating the tracks directory
+        let tracks = std::path::Path::new("astral_tracks");
+        if !tracks.exists() {
+            tokio::fs::create_dir_all(&tracks).await?;
+        }
+
         let client = Client::with_uri_str(url).await?;
         let inner = client.database("astral");
         let tracks_metadata = inner.collection("tracks_metadata");
@@ -54,8 +61,8 @@ impl AstralDatabase {
         let invite_codes = inner.collection("invite_codes");
         let undefined_tracks = inner.collection("undefined_tracks");
         let lyrics = inner.collection("lyrics");
-        let gridfs_tracks = inner.gridfs_bucket(GridFsBucketOptions::builder().bucket_name(String::from("tracks")).build());
         let gridfs_album_arts = inner.gridfs_bucket(GridFsBucketOptions::builder().bucket_name(String::from("album_arts")).build());
+
         Ok(Self {
             inner,
             tracks_metadata,
@@ -64,7 +71,6 @@ impl AstralDatabase {
             invite_codes,
             undefined_tracks,
             lyrics,
-            gridfs_tracks,
             accounts,
             gridfs_album_arts,
         })
