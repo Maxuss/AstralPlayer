@@ -8,25 +8,27 @@ export interface BackendController {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     post: (url: string, body: unknown) => Promise<any>,
     login: (username: string, password: string) => Promise<void>,
+    setUrl: (newUrl: string) => void,
     loading: boolean
 }
 
-function extractCookie(name: string): string | undefined {
+export function extractCookie(name: string): string | undefined {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     return parts.pop()?.split(';').shift()
 }
 
-function setCookie(name: string, value: string) {
+export function setCookie(name: string, value: string, expirationHours: number) {
     const date = new Date();
-    date.setTime(date.getTime() + (3 * 24 * 60 * 60 *1000));
+    date.setTime(date.getTime() + (expirationHours * 60 * 60 * 1000));
     const expires = "; expires=" + date.toDateString();
     document.cookie = name + "=" + value + expires + "; path=/";
 }
-const useInitializeBackendController: (baseUrl: string) => BackendController = (baseUrl) => {
-    const [refreshKey, setRefreshKey] = useState<string | undefined>()
-    const [accessKey, setAccessKey] = useState<string | undefined>()
+const useInitializeBackendController: () => BackendController = () => {
+    const [refreshKey, setRefreshKey] = useState<string | undefined>(extractCookie("refresh-token"))
+    const [accessKey, setAccessKey] = useState<string | undefined>(extractCookie("auth-token"))
     const [lastTokenValidation, setLastTokenValidation] = useState(-1)
+    const [url, setUrl] = useState(extractCookie("backend-url"));
 
     useEffect(() => {
         setRefreshKey(extractCookie("refresh-token"))
@@ -38,17 +40,17 @@ const useInitializeBackendController: (baseUrl: string) => BackendController = (
 
     useEffect(() => {
         // setting the refresh key cookie
-        setCookie("refresh-token", refreshKey || "");
+        setCookie("refresh-token", refreshKey || "", 3 * 24);
     }, [refreshKey]);
 
     useEffect(() => {
         // setting the auth key cookie
-        setCookie("auth-token", accessKey || "");
+        setCookie("auth-token", accessKey || "", 3 * 24);
     }, [accessKey])
 
     const requestAccessKey = useCallback(async (refresh: string) => {
         await axios({
-            url: `${baseUrl}/auth/token`,
+            url: `${url}/auth/token`,
             method: 'GET',
             headers: {
                 Authorization: `Bearer ${refresh}`
@@ -59,20 +61,23 @@ const useInitializeBackendController: (baseUrl: string) => BackendController = (
         }).catch(error => {
             console.error(`Failed to obtain access key with error ${error.response.status} ("${error.response.data.error_type}": ${error.response.data.message})`);
         })
-    }, [baseUrl]);
+    }, [url]);
 
     const validateAccessToken = useCallback(async () => {
         axios({
-            url: `${baseUrl}/auth/verify`,
+            url: `${url}/auth/verify`,
             method: 'POST',
             data: accessKey,
             headers: {
                 "Content-Type": "text/plain"
             }
         }).then(async result => {
-            if(result.data === "false") {
+            if(result.data === false) {
                 // need to refresh key
-                await requestAccessKey(refreshKey || "NONE")
+                console.log("REFRESHING")
+                await requestAccessKey(refreshKey || "NONE").then(() => {
+                    console.log("REFRESHED")
+                })
             }
         }).catch(err => {
             console.error(`Unknown error occurred: ${(err as AxiosError).message}`)
@@ -90,7 +95,7 @@ const useInitializeBackendController: (baseUrl: string) => BackendController = (
 
     const login = async (username: string, password: string) => {
         await axios({
-            url: `${baseUrl}/auth/login`,
+            url: `${url}/auth/login`,
             method: 'POST',
             data: {
                 username: username,
@@ -109,9 +114,9 @@ const useInitializeBackendController: (baseUrl: string) => BackendController = (
         })
     }
 
-    const get = useCallback(async (url: string) => {
+    const get = useCallback(async (newUrl: string) => {
         return await axios({
-            url: `${baseUrl}${url}`,
+            url: `${url}${newUrl}`,
             method: 'GET',
             headers: {
                 Authorization: `Bearer ${await obtainAccessToken()}`
@@ -120,16 +125,16 @@ const useInitializeBackendController: (baseUrl: string) => BackendController = (
             .then(body => body.data)
             .catch(async error => {
                 if(error.response !== undefined)
-                    console.error(`Failed to perform a GET request to ${url} -> ${error.response.status} ("${error.response.data.error_type}": ${error.response.data.message})`);
+                    console.error(`Failed to perform a GET request to ${newUrl} -> ${error.response.status} ("${error.response.data.error_type}": ${error.response.data.message})`);
             })
 
-    }, [baseUrl, obtainAccessToken])
+    }, [url, obtainAccessToken])
 
     return {
         get: get,
-        post: async (url, body) => {
+        post: async (path, body) => {
             return await axios({
-                url: `${baseUrl}${url}`,
+                url: `${url}${path}`,
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${await obtainAccessToken()}`,
@@ -140,11 +145,12 @@ const useInitializeBackendController: (baseUrl: string) => BackendController = (
                 .then(body => body.data)
                 .catch(error => {
                     if(error.response !== undefined)
-                        console.error(`Failed to perform a POST request to ${url} with body ${JSON.stringify(body)} -> ${error.response.status} ("${error.response.data.error_type}": ${error.response.data.message})`);
+                        console.error(`Failed to perform a POST request to ${path} with body ${JSON.stringify(body)} -> ${error.response.status} ("${error.response.data.error_type}": ${error.response.data.message})`);
                 })
         },
         login: login,
         loading: false,
+        setUrl: setUrl
     } as BackendController
 }
 
@@ -152,7 +158,7 @@ export const useBackendController = singletonHook<BackendController>({
     get: async () => { return { } },
     post: async () => { return { } },
     login: async () => { },
-    loading: true
-    },
-    () => useInitializeBackendController("http://localhost:8080") // TODO: custom URLs
+    loading: true,
+    setUrl: () => { }
+    }, useInitializeBackendController
 )

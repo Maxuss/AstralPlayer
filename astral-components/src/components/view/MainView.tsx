@@ -1,9 +1,12 @@
 import {Navbar} from "../bar/Navbar.tsx";
 import {AlbumView} from "./AlbumView.tsx";
 import {SearchView} from "./Search/SearchView.tsx";
-import React, {createRef, useCallback, useState} from "react";
+import {createRef, useCallback, useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
+import {extractCookie} from "../../util/BackendController.tsx";
+import {UploadView} from "./Upload/UploadView.tsx";
 
-export type ViewType = { album: string } | { search: string | undefined } | undefined;
+export type ViewType = { album: string } | { search: string | undefined } | 'upload' | undefined;
 
 export const MainView = () => {
     const [viewType, setViewType] = useState<ViewType>({ search: undefined })
@@ -13,15 +16,23 @@ export const MainView = () => {
         setViewType(view);
     }, [parentDiv])
 
+    const path = window.location.pathname
+    const navigate = useNavigate();
+    useEffect(() => {
+        const loggedIn = extractCookie("refresh-token")
+        if (loggedIn === "")
+            navigate(`/auth?then=${path}`)
+    }, [])
+
     return <div
         ref={parentDiv}
         style={{
             overflowY: typeof viewType === "object" && "search" in viewType ? "scroll" : "hidden"
         }}
-        className={`absolute w-[70%] left-[4%] right-[30%] h-[99%] top-[1%] bg-zinc-900 rounded-t-2xl overflow-x-hidden`}
+        className={`absolute w-[70%] left-[4%] right-[30%] h-[99%] top-[1%] bg-zinc-900 rounded-t-2xl overflow-x-hidden display-scroll`}
     >
-        <Navbar setSearch={(v) => v.length === 0 ? setViewType({ search: undefined }) : setViewType({ search: v })} />
+        <Navbar setView={setViewType} setSearch={(v) => v.length === 0 ? setViewType({ search: undefined }) : setViewType({ search: v })} />
 
-        {viewType === undefined ? <div></div> : "album" in viewType ? <AlbumView albumId={viewType.album} /> : <SearchView setView={changeView} search={viewType.search} />}
+        {viewType === undefined ? <div></div> : viewType === 'upload' ? <UploadView /> : "album" in viewType ? <AlbumView albumId={viewType.album} /> : <SearchView setView={changeView} search={viewType.search} />}
     </div>
 }

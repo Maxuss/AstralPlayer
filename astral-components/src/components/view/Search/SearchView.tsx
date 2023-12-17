@@ -38,8 +38,8 @@ export interface IndexedTrack {
 
 export const SearchView: React.FC<SearchProps> = ({ search, setView }) => {
     const [albums, setAlbums] = useState<IndexedAlbum[]>([])
-    const [artists, setArtists] = useState<IndexedArtist[]>([])
-    const [tracks, setTracks] = useState<IndexedTrack[]>([])
+    const [artists, setArtists] = useState<IndexedArtist[]>([]) // TODO: fix artists
+    const [tracks, setTracks] = useState<IndexedTrack[]>([]) // TODO: use tracks
 
     const { get, loading } = useBackendController();
 

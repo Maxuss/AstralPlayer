@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Outfit:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Outfit:wght@500;600&family=Inter:wght@600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,6 +10,10 @@
 
 .font-montserrat {
     font-family: 'Montserrat', sans-serif;
+}
+
+.font-inter {
+    font-family: 'Inter', "Open Sans", sans-serif;
 }
 
 .fullscreen {
@@ -27,4 +31,17 @@
     padding: 0;
     border: 0;
     border-collapse: collapse;
+}
+
+.auth-bg {
+    background-color:hsla(120,0%,3%,1);
+    background-image:
+            radial-gradient(at 74% 57%, hsla(97,0%,0%,1) 0px, transparent 50%),
+            radial-gradient(at 66% 33%, hsla(11,0%,0%,1) 0px, transparent 50%),
+            radial-gradient(at 22% 34%, hsla(104,0%,0%,1) 0px, transparent 50%),
+            radial-gradient(at 57% 97%, hsla(272,100%,24%,0.18) 0px, transparent 50%),
+            radial-gradient(at 28% 94%, hsla(266,67%,56%,0.13) 0px, transparent 50%),
+            radial-gradient(at 6% 67%, hsla(250,66%,75%,0.28) 0px, transparent 50%),
+            radial-gradient(at 89% 12%, hsla(256,66%,75%,0.28) 0px, transparent 50%),
+            radial-gradient(at 61% 4%, hsla(225,82%,61%,0.25) 0px, transparent 50%)
 }
