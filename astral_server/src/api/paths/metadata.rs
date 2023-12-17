@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::{Json};
 use axum::body::Body;
 use axum::response::IntoResponse;
@@ -9,6 +9,10 @@ use chrono::NaiveDateTime;
 use futures_util::{StreamExt};
 use mongodb::bson::doc;
 use mongodb::GridFsDownloadStream;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use reqwest::Url;
+use serde::Deserialize;
+use serde_json::Value;
 use tokio_util::compat::{Compat, FuturesAsyncReadCompatExt};
 use tokio_util::io::ReaderStream;
 use uuid::Uuid;
@@ -18,6 +22,7 @@ use crate::api::model::{TrackMetadataResponse, AlbumMetadataResponse, ArtistMeta
 use crate::data::AstralDatabase;
 use crate::data::model::{AlbumMetadata, ArtistMetadata, BsonId, TrackMetadata};
 use crate::err::AstralError;
+use crate::metadata::ExtractedTrackMetadata;
 use crate::Res;
 
 /// Gets full metadata of a single track
@@ -172,6 +177,46 @@ pub async fn get_track_cover_art(
             stream_body
         )
     )
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MusixmatchQuery {
+    q_album: String,
+    q_artist: String,
+    q_track: String,
+    track_spotify_id: String,
+    q_duration: String,
+}
+
+// this is kind of a hack, so i dont think we really need documentation for now
+// TODO: docs later?
+pub async fn pass_to_musixmatch(
+    State(_): State<AppState>,
+    AuthenticatedUser(_): AuthenticatedUser,
+    Query(query): Query<MusixmatchQuery>
+) -> Res<impl IntoResponse> {
+    const BASE_URL: &str = "https://apic-desktop.musixmatch.com/ws/1.1/macro.subtitles.get?format=json&namespace=lyrics_richsynched&subtitle_format=mxm&app_id=web-desktop-app-v1.0";
+
+    let uri = Url::parse_with_params(BASE_URL, [
+        ("q_album", &query.q_album),
+        ("q_artist", &query.q_artist),
+        ("q_artists", &query.q_artist),
+        ("q_track", &query.q_track),
+        ("track_spotify_id", &query.track_spotify_id),
+        ("q_duration", &query.q_duration),
+        ("f_subtitle_length", &String::new()),
+        ("usertoken", &String::from("2005218b74f939209bda92cb633c7380612e14cb7fe92dcd6a780f"))
+    ]).unwrap();
+
+    let client = reqwest::Client::new();
+    let json = client.get(uri)
+        .headers(HeaderMap::from_iter([
+            (HeaderName::from_static("authority"), HeaderValue::from_static("apic-desktop.musixmatch.com")),
+            (HeaderName::from_static("cookie"), HeaderValue::from_static("x-mmm-token-guid="))
+        ]))
+        .send().await?
+        .json::<Value>().await?;
+    Ok(Json(json))
 }
 
 pub async fn extract_track_metadata(db: &AstralDatabase, track_id: BsonId) -> Res<FullTrackMetadata> {

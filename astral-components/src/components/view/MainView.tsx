@@ -27,7 +27,7 @@ export const MainView = () => {
     return <div
         ref={parentDiv}
         style={{
-            overflowY: typeof viewType === "object" && "search" in viewType ? "scroll" : "hidden"
+            overflowY: viewType === 'upload' || (typeof viewType === "object" && "search" in viewType) ? "scroll" : "hidden"
         }}
         className={`absolute w-[70%] left-[4%] right-[30%] h-[99%] top-[1%] bg-zinc-900 rounded-t-2xl overflow-x-hidden display-scroll`}
     >

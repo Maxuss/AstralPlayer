@@ -89,6 +89,9 @@ pub async fn start_axum() -> anyhow::Result<()> {
         .route("/user/love/album/:album", post(user::love_album))
         .route("/user/unlove/album/:album", post(user::unlove_album))
 
+        // metadata (creepy edition)
+        .route("/metadata/musixmatch", get(metadata::pass_to_musixmatch))
+
         .layer(cors)
         .with_state(state);
 

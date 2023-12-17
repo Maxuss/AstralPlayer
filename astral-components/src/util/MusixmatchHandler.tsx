@@ -1,7 +1,3 @@
-import axios from "axios";
-
-const MUSIXMATCH_BASE_URL: string = "https://apic-desktop.musixmatch.com/ws/1.1/macro.subtitles.get?format=json&namespace=lyrics_richsynched&subtitle_format=mxm&app_id=web-desktop-app-v1.0";
-
 export interface MusixmatchTrackData {
     name: string,
     album: string,
@@ -16,8 +12,10 @@ export async function musixmatchSearch(
     album: string | undefined,
     artist: string | undefined,
     spotifyId: string | undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    get: (path: string) => Promise<any>,
 ): Promise<MusixmatchTrackData | undefined> {
-    const uri = new URL(MUSIXMATCH_BASE_URL);
+    const uri = new URL("https://example.com/");
     uri.searchParams.append("q_album", album || "");
     uri.searchParams.append("q_artist", artist || "");
     uri.searchParams.append("q_artists", artist || "");
@@ -27,15 +25,8 @@ export async function musixmatchSearch(
     uri.searchParams.append("f_subtitle_length", "");
     uri.searchParams.append("usertoken", "2005218b74f939209bda92cb633c7380612e14cb7fe92dcd6a780f");
 
-    return await axios({
-        method: 'GET',
-        url: uri.toString(),
-        headers: {
-            'authority': 'apic-desktop.musixmatch.com',
-            'cookie': 'x-mmm-token-guid='
-        }
-    }).then(response => {
-        const data = response.data.message.body.macro_calls;
+    return await get(uri.toString().replace("https://example.com/", "/metadata/musixmatch")).then(response => {
+        const data = response.message.body.macro_calls;
         const status = data["matcher.track.get"].message.header.status_code
         if(status != 200) {
             switch (status) {
