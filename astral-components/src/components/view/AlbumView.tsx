@@ -110,7 +110,7 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
             <AlbumCoverDisplay albumData={albumData!} />
             <div className={"ml-5 flex flex-col"}>
                 <span className={"flex flex-row w-[100%]"}>
-                    <span className={"text-5xl font-extrabold text-zinc-100 font-montserrat w-[35rem] max-h-[30rem]"}>
+                    <span className={"text-5xl font-extrabold text-zinc-100 font-montserrat ml-[-0.2rem] w-[35rem] max-h-[30rem]"}>
                         {albumData?.name}
                     </span>
                     <span className={"text-4xl mt-2 font-extrabold text-zinc-100 font-montserrat absolute right-0"}>

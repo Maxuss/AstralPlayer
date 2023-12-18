@@ -29,7 +29,7 @@ export const MainView = () => {
         style={{
             overflowY: viewType === 'upload' || (typeof viewType === "object" && "search" in viewType) ? "scroll" : "hidden"
         }}
-        className={`absolute w-[70%] left-[4%] right-[30%] h-[99%] top-[1%] bg-zinc-900 rounded-t-2xl overflow-x-hidden display-scroll`}
+        className={`absolute w-[69.5%] left-[2.5%] right-[30%] h-[87%] top-[1%] bg-zinc-900 rounded-t-2xl rounded-b-lg overflow-x-hidden display-scroll`}
     >
         <Navbar setView={setViewType} setSearch={(v) => v.length === 0 ? setViewType({ search: undefined }) : setViewType({ search: v })} />
 

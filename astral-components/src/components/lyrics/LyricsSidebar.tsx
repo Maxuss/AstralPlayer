@@ -86,7 +86,7 @@ export const LyricsSidebar = () => {
         }
     }, [position]);
 
-    return <div className={`lyrics-frame w-[25%] h-[85%] top-[1%] left-[74.5%]`} style={{ backgroundColor: data?.darkVibrant || "black" }}>
+    return <div className={`lyrics-frame w-[25%] h-[87%] top-[1%] left-[72.5%]`} style={{ backgroundColor: data?.darkVibrant || "black" }}>
         <div className={"frame-lyrics"} data-id="lyrics-container">
             {
                 lyrics?.map((each, idx) =>

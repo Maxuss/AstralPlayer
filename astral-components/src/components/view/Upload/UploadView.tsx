@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import * as metadata from "music-metadata-browser";
 import {Buffer} from "buffer";
 import * as process from "process";
@@ -7,6 +7,8 @@ import {useBackendController} from "../../../util/BackendController.tsx";
 
 async function fetchFileData(file: File, get: (path: string) => Promise<unknown>): Promise<MusixmatchTrackData> {
     const parsed = await metadata.parseReadableStream(file.stream(), { size: file.size, mimeType: file.name }).catch(() => undefined);
+    console.log("FETCHING DATA");
+    console.log(parsed);
     if (parsed === undefined) {
         return {
             name: file.name,
@@ -30,7 +32,7 @@ async function fetchFileData(file: File, get: (path: string) => Promise<unknown>
         const picture = parsed.common.picture === undefined ? "none" : (window.URL || window.webkitURL).createObjectURL(new Blob([metadata.selectCover(parsed.common.picture)!.data]));
         const date = parsed.common.date || `${parsed.common.year}-01-01`;
         return {
-            name: file.name,
+            name: parsed.common.title || file.name,
             album: parsed.common.album || "unknown",
             artist: parsed.common.artist || "unknown",
             duration: Math.round(parsed.format.duration || 0),
@@ -77,7 +79,7 @@ export const UploadView = () => {
 
             <div className={"ml-[3.2em] grid grid-cols-5 gap-y-5"}>
                 {
-                    extractedFiles?.map(((each, idx) => <PreuploadedCard promise={each} key={idx}/>))
+                    extractedFiles?.map(((each, idx) => <PreuploadedCard promise={each} key={files?.item(idx)?.name || "unknown"}/>))
                 }
             </div>
         </div>
@@ -95,8 +97,11 @@ const PreuploadedCard = ({ promise }: { promise: Promise<MusixmatchTrackData> })
         {
             track === undefined ? <LoadingCard /> :
                 <div
-                    className={"rounded-lg transition-all ease-in-out bg-[#2d2d2d63] hover:bg-[#3d3d3d63] w-[15em] h-[25em] flex flex-col"}>
-                    {/*TODO: actually finish this*/}
+                    className={"rounded-lg transition-all ease-in-out bg-[#2d2d2d63] hover:bg-[#3d3d3d63] w-[14em] h-[22.5em] flex flex-col"}>
+                    <p className={"text-zinc-100 text-lg mt-5 ml-[1.5em] absolute rounded-tl-xl rounded-br-xl w-[3em] pl-2 bg-zinc-900 select-none"}>
+                        {Math.round(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, "0")}
+                    </p>
+
                     <img alt={"Cover art"} src={track.coverUrl} className={"rounded-xl self-center mt-5"} width={"75%"}
                          height={"75%"}/>
                     <input
@@ -111,7 +116,7 @@ const PreuploadedCard = ({ promise }: { promise: Promise<MusixmatchTrackData> })
                     <input
                         className={"bg-zinc-800 outline outline-2 outline-zinc-700 self-center mt-2 text-zinc-50 px-2 w-[75%] rounded-lg text-lg"}
                         defaultValue={track.releaseDate.substring(0, 10)} placeholder={"Release date"} type={"date"}/>
-
+                    {/*  TODO: reload button  */}
                 </div>
         }
     </>
