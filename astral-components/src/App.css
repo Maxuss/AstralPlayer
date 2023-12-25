@@ -45,3 +45,20 @@
             radial-gradient(at 89% 12%, hsla(256,66%,75%,0.28) 0px, transparent 50%),
             radial-gradient(at 61% 4%, hsla(225,82%,61%,0.25) 0px, transparent 50%)
 }
+
+.spinner-spin {
+    animation: spinner 1s linear infinite
+}
+
+@keyframes spinner {
+    from {
+        transform: rotate(0deg)
+    }
+    to {
+        transform: rotate(360deg)
+    }
+}
+
+input[type="file"] {
+    display: none;
+}
