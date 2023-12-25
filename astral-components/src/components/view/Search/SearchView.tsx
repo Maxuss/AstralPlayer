@@ -4,6 +4,7 @@ import {SearchAlbumDisplay} from "./SearchAlbumDisplay.tsx";
 import './SearchView.css'
 import {ViewType} from "../MainView.tsx";
 import {SearchArtistDisplay} from "./SearchArtistDisplay.tsx";
+import {SearchTrackDisplay} from "./SearchTrackDisplay.tsx";
 
 export interface SearchProps {
     search: string | undefined,
@@ -89,7 +90,12 @@ export const SearchView: React.FC<SearchProps> = ({ search, setView }) => {
         <h2 className={"text-4xl text-zinc-200 font-bold font-montserrat mt-[6%] ml-[1.6em] select-none"}>
             Songs
         </h2>
-        <div className={"inline-grid md:grid-rows grid-flow-col display-scroll mx-[3.2em] mt-5"}>
+        <div className={"inline-grid md:grid-rows grid-flow-row gap-2 display-scroll mx-[3.2em] mt-5 mb-[5em]"}>
+            {
+                tracks?.map((each, idx) => (
+                    <SearchTrackDisplay key={idx} index={each} />
+                ))
+            }
         </div>
 
     </>
