@@ -6,7 +6,9 @@ export interface BackendController {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     get: (url: string) => Promise<any>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    post: (url: string, body: unknown) => Promise<any>,
+    post: (url: string, body: unknown, mtd: 'POST' | 'PATCH' | undefined) => Promise<any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    postFile: (url: string, form: unknown) => Promise<any>,
     login: (username: string, password: string) => Promise<void>,
     setUrl: (newUrl: string) => void,
     loading: boolean
@@ -132,10 +134,10 @@ const useInitializeBackendController: () => BackendController = () => {
 
     return {
         get: get,
-        post: async (path, body) => {
+        post: async (path, body, mtd) => {
             return await axios({
                 url: `${url}${path}`,
-                method: 'POST',
+                method: mtd || 'POST',
                 headers: {
                     Authorization: `Bearer ${await obtainAccessToken()}`,
                     "Content-Type": "application/json"
@@ -143,6 +145,20 @@ const useInitializeBackendController: () => BackendController = () => {
                 data: body
             })
                 .then(body => body.data)
+                .catch(error => {
+                    if(error.response !== undefined)
+                        console.error(`Failed to perform a POST request to ${path} with body ${JSON.stringify(body)} -> ${error.response.status} ("${error.response.data.error_type}": ${error.response.data.message})`);
+                })
+        },
+        postFile: async (path, body) => {
+            return await axios.post(`${url}${path}`, body, {
+                headers: {
+                    Authorization: `Bearer ${await obtainAccessToken()}`,
+                    'Content-Type': 'application/octet-stream'
+                },
+                maxBodyLength: Infinity,
+                maxContentLength: Infinity,
+            }).then(body => body.data)
                 .catch(error => {
                     if(error.response !== undefined)
                         console.error(`Failed to perform a POST request to ${path} with body ${JSON.stringify(body)} -> ${error.response.status} ("${error.response.data.error_type}": ${error.response.data.message})`);
@@ -159,6 +175,7 @@ export const useBackendController = singletonHook<BackendController>({
     post: async () => { return { } },
     login: async () => { },
     loading: true,
+    postFile: async () => { },
     setUrl: () => { }
     }, useInitializeBackendController
 )

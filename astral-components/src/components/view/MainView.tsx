@@ -33,6 +33,6 @@ export const MainView = () => {
     >
         <Navbar setView={setViewType} setSearch={(v) => v.length === 0 ? setViewType({ search: undefined }) : setViewType({ search: v })} />
 
-        {viewType === undefined ? <div></div> : viewType === 'upload' ? <UploadView /> : "album" in viewType ? <AlbumView albumId={viewType.album} /> : <SearchView setView={changeView} search={viewType.search} />}
+        {viewType === undefined ? <div></div> : viewType === 'upload' ? <UploadView /> : "album" in viewType ? <AlbumView albumId={viewType.album} setView={setViewType} /> : <SearchView setView={changeView} search={viewType.search} />}
     </div>
 }

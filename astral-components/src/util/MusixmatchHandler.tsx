@@ -23,7 +23,7 @@ export async function musixmatchSearch(
     uri.searchParams.append("track_spotify_id", spotifyId || "");
     uri.searchParams.append("q_duration", "");
     uri.searchParams.append("f_subtitle_length", "");
-    uri.searchParams.append("usertoken", "2005218b74f939209bda92cb633c7380612e14cb7fe92dcd6a780f");
+    uri.searchParams.append("usertoken", "21051986b9886beabe1ce01c3ce94c96319411f8f2c122676365e3");
 
     return await get(uri.toString().replace("https://example.com/", "/metadata/musixmatch")).then(response => {
         const data = response.message.body.macro_calls;
@@ -64,9 +64,7 @@ export async function musixmatchSearch(
             duration: duration,
             coverUrl: coverUrl
         }
-    }).catch(err => {
-        console.error("Failed to get musixmatch metadata");
-        console.error(err);
+    }).catch(() => {
         return undefined;
     })
 }

@@ -17,7 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({ setSearch, setView }) => {
         {/* TODO: proper user page */}
         <div className={"flex flex-row absolute right-9 gap-2 select-none mt-2"}>
             <img
-                src={"https://cdn.discordapp.com/avatars/381827687775207424/b8259800be4529e43408f6b340e08728?size=1024"}
+                src={"https://images-ext-2.discordapp.net/external/0wBRZzBXdLGPA48pl0USxNpi4_uM2_ARzNg3bE9phK8/%3Fsize%3D2048/https/cdn.discordapp.com/avatars/381827687775207424/fe994476bd26ae1775cb412fc1c7223a.png"}
                 className={"w-8 h-8 rounded-full"} alt={"User avatar"}/>
             <div className={"text-zinc-200 mt-0.5 text-lg"}>maxus</div>
         </div>

@@ -14,6 +14,7 @@ export interface PlaylistController {
     goto: (pos: number) => void,
     getPosition: () => number,
     append: (track: QueuedTrack) => void,
+    setQueue: (newQueue: QueuedTrack[]) => void,
 
     setShuffle: (state: boolean) => void,
     isShuffle: boolean,
@@ -53,6 +54,7 @@ const useInitializePlaylistController: () => PlaylistController = () => {
     const queue = useRef<QueuedTrack[]>([])
     const [currentTrack, setCurrentTrack] = useState(-1)
 
+    // TODO: oh my god this is horrible
     const next = useCallback(() => {
         let newTrack = -1;
         setCurrentTrack(trackNum => {
@@ -172,6 +174,9 @@ const useInitializePlaylistController: () => PlaylistController = () => {
         append: track => {
             queue.current.push(track)
         },
+        setQueue: newQueue => {
+            queue.current = newQueue;
+        },
 
         setShuffle: setShuffle,
         isShuffle: isShuffle,
@@ -196,6 +201,7 @@ export const usePlaylistController = singletonHook<PlaylistController>({
         goto: () => { },
         getPosition: () => 0,
         append: () => { },
+        setQueue: () => { },
         setShuffle: () => { },
         isShuffle: false,
         setRepeat: () => { },

@@ -4,9 +4,11 @@ import {CircleIcon} from "../icons/CircleIcon.tsx";
 import {AlbumTrack} from "./AlbumTrack.tsx";
 import {AlbumCoverDisplay} from "./AlbumCoverDisplay.tsx";
 import {useBackendController} from "../../util/BackendController.tsx";
+import {ViewType} from "./MainView.tsx";
 
 export interface AlbumViewProps {
-    albumId: string
+    albumId: string,
+    setView: (v: ViewType) => void
 }
 
 export interface AlbumTrackData {
@@ -28,14 +30,14 @@ export interface AlbumData {
     tracks: AlbumTrackData[]
 }
 
-export const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
+export const AlbumView: React.FC<AlbumViewProps> = ({ albumId, setView }) => {
     const [albumData, setAlbumData] = useState<AlbumData | undefined>({
         id: albumId,
-        name: "JOECHILLWORLD",
-        artist: "Devon Hendryx",
-        releaseDate: "2011",
-        yourRating: 5.0,
-        rymRating: 3.8,
+        name: "Loading...",
+        artist: "Loading...",
+        releaseDate: "Loading...",
+        yourRating: 0,
+        rymRating: 0,
         tracks: []
     });
     const [lastFetched, setLastFetched] = useState<string | undefined>();
@@ -107,7 +109,7 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
         <img alt={""} className={"album-backdrop pointer-events-none object-fill blur-3xl opacity-[10%] w-full overflow-hidden"} src={`http://localhost:8080/metadata/album/${albumId}/cover`} />
 
         <div className={"flex flex-row flex-grow absolute left-[10%] top-[20%] select-none"}>
-            <AlbumCoverDisplay albumData={albumData!} />
+            <AlbumCoverDisplay albumData={albumData!} changeView={setView} />
             <div className={"ml-5 flex flex-col"}>
                 <span className={"flex flex-row w-[100%]"}>
                     <span className={"text-5xl font-extrabold text-zinc-100 font-montserrat ml-[-0.2rem] w-[35rem] max-h-[30rem]"}>

@@ -7,8 +7,6 @@ import {useBackendController} from "../../../util/BackendController.tsx";
 
 async function fetchFileData(file: File, get: (path: string) => Promise<unknown>): Promise<MusixmatchTrackData> {
     const parsed = await metadata.parseReadableStream(file.stream(), { size: file.size, mimeType: file.name }).catch(() => undefined);
-    console.log("FETCHING DATA");
-    console.log(parsed);
     if (parsed === undefined) {
         return {
             name: file.name,
@@ -45,7 +43,7 @@ async function fetchFileData(file: File, get: (path: string) => Promise<unknown>
 
 export const UploadView = () => {
     const [files, setFiles] = useState<FileList | undefined>()
-    const {get} = useBackendController();
+    const {get, post, postFile} = useBackendController();
 
     useEffect(() => {
         // this is cursed tbh
@@ -64,8 +62,37 @@ export const UploadView = () => {
         return promises
     }, [files, get])
 
+    const uploadToServer = useCallback(() => {
+        if(files === undefined || extractedFiles === undefined)
+            return;
+        for(let i = 0; i < files.length; i++) {
+            const fileData = files.item(i)!;
+            extractedFiles[i].then(async file => {
+                const splitName = fileData.name.split(".");
+                const ext = splitName[splitName.length - 1];
+                postFile(`/upload/track/${ext}`, (await fileData.arrayBuffer())).then(async resp => {
+                    const trackId = resp.track_id;
+                    // TODO: uploading other edited info here
+                    await post(`/upload/guess_metadata/${trackId}?musix_priority=true&musix_artist_override=${file.artist}&musix_album_override=${file.album}&musix_name_override=${file.name}`, {}).then(async innerResp => {
+                        if(innerResp === undefined) {
+                            // failed to upload with musix, skipping musix then
+                            await post(`/upload/guess_metadata/${trackId}?skip_musix=true&musix_priority=true&musix_artist_override=${file.artist}&musix_album_override=${file.album}&musix_name_override=${file.name}`, {}).then(() => {
+                                console.log("Finished uploading track")
+                            })
+                        } else {
+                            console.log(`Uploaded track ${trackId}`)
+                        }
+                    }).catch(async err => {
+                        console.error("Failed to upload track metadata")
+                        console.error(err)
+                    })
+                });
+            });
+        }
+    }, [extractedFiles, files])
+
     return <>
-        <div className={"mt-[1%]"}>
+        <div className={"mt-[1%] flex flex-col"}>
             <h1 className={"ml-[1.6em] text-4xl text-zinc-50 font-montserrat "}>
                 Upload music to the server
             </h1>
@@ -77,16 +104,25 @@ export const UploadView = () => {
             <input type="file" name="fileUpload" accept={"audio/flac, audio/mpeg, audio/mp4"} multiple={true}
                    onChange={e => setFiles(e.target.files as FileList)}/>
 
-            <div className={"ml-[3.2em] grid grid-cols-5 gap-y-5"}>
+            <div className={"self-center grid grid-cols-5 gap-5"}>
                 {
-                    extractedFiles?.map(((each, idx) => <PreuploadedCard promise={each} key={files?.item(idx)?.name || "unknown"}/>))
+                    extractedFiles?.map(((each, idx) => <PreuploadedCard promise={each}
+                                                                         key={files?.item(idx)?.name || "unknown"}/>))
                 }
             </div>
+
+
+            <button
+                className={"mt-5 self-center bg-zinc-700 outline outline-2 outline-transparent hover:bg-zinc-500 hover:outline-zinc-50 transition-all ease-in-out rounded-lg text-xl  text-zinc-50 w-[20%] h-10"}
+                onClick={uploadToServer}
+                >
+                Upload to server
+            </button>
         </div>
     </>
 }
 
-const PreuploadedCard = ({ promise }: { promise: Promise<MusixmatchTrackData> }) => {
+const PreuploadedCard = ({promise}: { promise: Promise<MusixmatchTrackData> }) => {
     const [track, setTrack] = useState<MusixmatchTrackData | undefined>()
 
     useEffect(() => {
@@ -94,7 +130,7 @@ const PreuploadedCard = ({ promise }: { promise: Promise<MusixmatchTrackData> })
     }, []);
 
     return <>
-        {
+    {
             track === undefined ? <LoadingCard /> :
                 <div
                     className={"rounded-lg transition-all ease-in-out bg-[#2d2d2d63] hover:bg-[#3d3d3d63] w-[14em] h-[22.5em] flex flex-col"}>

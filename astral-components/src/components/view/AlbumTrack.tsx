@@ -15,6 +15,7 @@ export const AlbumTrack: React.FC<AlbumTrackProps> = ({ data, album }) => {
     const [isHovered, setHovered] = useState(false);
 
     const playTrack = useCallback(() => {
+        // TODO: fix this oh my god
         append({
             album: album, artist: data.artist, format: data.format as ("mp3" | "flac"), id: data.id, title: data.name
         })
