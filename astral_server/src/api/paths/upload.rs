@@ -402,7 +402,7 @@ pub async fn patch_album_metadata(
     }
     db.albums_metadata.update_one(doc! { "album_id": &album_id }, doc! { "$set": doc_object }, None).await?;
 
-    let metadata = extract_album_metadata(&db, album_id).await?;
+    let metadata = extract_album_metadata(&db, album_id, &user).await?;
 
     Ok(Json(AlbumMetadataResponse {
         album_id: album_id.to_uuid_1(),

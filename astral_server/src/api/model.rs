@@ -330,6 +330,8 @@ pub struct MinifiedTrackMetadata {
     pub disc_number: u16,
     /// Whether this track contains explicit lyrics
     pub is_explicit: bool,
+    /// Whether this track is loved by the user
+    pub is_loved: bool
 }
 
 /// Essential, but minified album metadata

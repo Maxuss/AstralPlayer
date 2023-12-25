@@ -4,6 +4,7 @@ import {usePlaylistController} from "../../util/PlaylistController.tsx";
 import {IconPlayFill} from "../icons/IconPlayFill.tsx";
 import {Love} from "../icons/LoveIcon.tsx";
 import './AlbumTrack.css';
+import {useBackendController} from "../../util/BackendController.tsx";
 
 export interface AlbumTrackProps {
     data: AlbumTrackData,
@@ -12,7 +13,9 @@ export interface AlbumTrackProps {
 
 export const AlbumTrack: React.FC<AlbumTrackProps> = ({ data, album }) => {
     const { append, next, currentTrack } = usePlaylistController();
+    const { post } = useBackendController();
     const [isHovered, setHovered] = useState(false);
+    const [isLoved, setLoved] = useState(data.loved);
 
     const playTrack = useCallback(() => {
         // TODO: fix this oh my god
@@ -38,7 +41,12 @@ export const AlbumTrack: React.FC<AlbumTrackProps> = ({ data, album }) => {
         <div className={"my-2 w-[150%]"}>{data.name}</div>
         <div className={"my-2 w-[40%]"}>{Math.floor(data.length / 60)}:{(data.length % 60).toString().padStart(2, "0")}</div>
 
-        <Love love={false} className={"fill-black-hover mt-3 transition-colors ease-in-out scale-[300%] cursor-pointer ml-5 mr-10"} />
+        <Love love={isLoved} className={"fill-black-hover mt-3 transition-colors ease-in-out scale-[300%] cursor-pointer ml-5 mr-10"} onClick={async e => {
+            e.stopPropagation()
+            await post(`/user/${isLoved ? "unlove" : "love"}/track/${data.id}`, {}, 'POST').then(() => {
+                setLoved(!isLoved)
+            })
+        }} />
 
     </div>
 }

@@ -108,7 +108,7 @@ export const LyricsSidebar = () => {
                             {each.line}
                         </div>
                     ) : <div key={idx} className={"frame-lyric-line frame-lyric-line-active"}>{each}</div>
-                ) ?? (<div className={"mt-[50%]"} >No lyrics for this song!</div>)
+                )
             }
         </div>
 

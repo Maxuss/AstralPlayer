@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {AlbumData} from "./AlbumView.tsx";
 import {usePlaylistController} from "../../util/PlaylistController.tsx";
 import EditIcon from "../icons/EditIcon.tsx";
@@ -19,6 +19,11 @@ export const AlbumCoverDisplay: React.FC<AlbumCoverDisplayProps> = ({ albumData,
     const { post } = useBackendController();
     const [isEditing, setEditing] = useState(false);
     const [modAlbumName, setModAlbumName] = useState(albumData.name);
+    const [isLoved, setIsLoved] = useState(albumData.loved);
+
+    useEffect(() => {
+        setIsLoved(albumData.loved)
+    }, [albumData]);
 
     const isPlayingAlbum = useMemo(() => {
         if(albumData === undefined)
@@ -46,10 +51,16 @@ export const AlbumCoverDisplay: React.FC<AlbumCoverDisplayProps> = ({ albumData,
                                fill-white hover:fill-zinc-200 transition-colors ease-in-out scale-[300%]
                                cursor-pointer mx-5 "/>
 
-            <Love love={false}
+            <Love love={isLoved}
                   className="
                                fill-white hover:fill-zinc-200 transition-colors ease-in-out scale-[250%]
-                               cursor-pointer mx-5"/>
+                               cursor-pointer mx-5"
+                  onClick={async () => {
+                      await post(`/user/${isLoved ? "unlove" : "love"}/album/${albumData.id}`, {}, undefined).then(() => {
+                          setIsLoved(!isLoved)
+                      })
+                  }}
+            />
         </div>
         {isEditing ? <div className={"flex flex-col gap-2 mt-0 justify-start"}>
             <span className={"flex flex-row self-center"}>
@@ -66,8 +77,7 @@ export const AlbumCoverDisplay: React.FC<AlbumCoverDisplayProps> = ({ albumData,
                         onClick={async () => {
                             await post(`/upload/album/${albumData.id}/patch`, { album_name: modAlbumName }, 'PATCH').then(() => {
                                 changeView(undefined);
-                                setTimeout(() => changeView({album: albumData.id}), 1)
-
+                                setTimeout(() => changeView({album: albumData.id}), 1) // react is weird sometimes
                             })
                         }}
                 >

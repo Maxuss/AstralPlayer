@@ -18,6 +18,7 @@ export interface AlbumTrackData {
     length: number,
     format: string,
     artist: string,
+    loved: boolean
 }
 
 export interface AlbumData {
@@ -27,7 +28,8 @@ export interface AlbumData {
     releaseDate: string,
     yourRating: number,
     rymRating: number,
-    tracks: AlbumTrackData[]
+    tracks: AlbumTrackData[],
+    loved: boolean
 }
 
 export const AlbumView: React.FC<AlbumViewProps> = ({ albumId, setView }) => {
@@ -38,7 +40,8 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId, setView }) => {
         releaseDate: "Loading...",
         yourRating: 0,
         rymRating: 0,
-        tracks: []
+        tracks: [],
+        loved: false
     });
     const [lastFetched, setLastFetched] = useState<string | undefined>();
     const { get } = useBackendController();
@@ -71,12 +74,13 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId, setView }) => {
                     name: track.track_name,
                     length: track.track_length,
                     format: track.format,
-                    artist: artistString.substring(0, artistString.length - 2)
+                    artist: artistString.substring(0, artistString.length - 2),
+                    loved: track.is_loved
                 })
             }))
 
             const meta = metadata.metadata;
-            const data = {
+            const data: AlbumData = {
                 id: metadata.album_id,
                 artist: meta.artists.map(each => each.artist_name).join(", "),
                 name: meta.album_name,
@@ -84,6 +88,7 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId, setView }) => {
                 yourRating: 4.5,
                 rymRating: 4.5,
                 tracks: extractedTracks,
+                loved: metadata.loved
             };
             data.tracks.sort((a, b) => a.index < b.index ? -1 : a.index > b.index ? 1 : 0)
             setAlbumData(data)

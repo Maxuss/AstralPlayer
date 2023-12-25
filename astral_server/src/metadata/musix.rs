@@ -18,7 +18,7 @@ pub async fn musix_request(
         ("track_spotify_id", &String::new()),
         ("q_duration", &String::new()),
         ("f_subtitle_length", &String::new()),
-        ("usertoken", usertoken.as_ref().unwrap_or(&"2005218b74f939209bda92cb633c7380612e14cb7fe92dcd6a780f".to_string()).as_str())
+        ("usertoken", usertoken.as_ref().unwrap_or(&"211117e30ad03b818a41fd7d38b8191cadf33e797bef89ae809017".to_string()).as_str())
     ]).unwrap();
 
     let client = reqwest::Client::new();

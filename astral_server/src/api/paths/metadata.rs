@@ -20,7 +20,7 @@ use crate::api::AppState;
 use crate::api::extensions::AuthenticatedUser;
 use crate::api::model::{TrackMetadataResponse, AlbumMetadataResponse, ArtistMetadataResponse, FullTrackMetadata, MinifiedArtistMetadata, MinifiedAlbumMetadata, MinifiedTrackMetadata, FullArtistMetadata, FullAlbumMetadata};
 use crate::data::AstralDatabase;
-use crate::data::model::{AlbumMetadata, ArtistMetadata, BsonId, TrackMetadata};
+use crate::data::model::{AlbumMetadata, ArtistMetadata, BsonId, TrackMetadata, UserAccount};
 use crate::err::AstralError;
 use crate::metadata::ExtractedTrackMetadata;
 use crate::Res;
@@ -99,7 +99,7 @@ pub async fn get_album_metadata(
     AuthenticatedUser(user): AuthenticatedUser
 ) -> Res<Json<AlbumMetadataResponse>> {
     let bid = BsonId::from_uuid_1(uuid.clone());
-    let metadata = extract_album_metadata(&db, bid.clone()).await?;
+    let metadata = extract_album_metadata(&db, bid.clone(), &user).await?;
     Ok(Json(
         AlbumMetadataResponse {
             album_id: uuid,
@@ -234,13 +234,13 @@ pub async fn extract_track_metadata(db: &AstralDatabase, track_id: BsonId) -> Re
     })
 }
 
-pub async fn extract_album_metadata(db: &AstralDatabase, album_id: BsonId) -> Res<FullAlbumMetadata> {
+pub async fn extract_album_metadata(db: &AstralDatabase, album_id: BsonId, user: &UserAccount) -> Res<FullAlbumMetadata> {
     let album = db.albums_metadata.find_one(doc! { "album_id": album_id }, None).await?
         .ok_or_else(|| AstralError::NotFound(format!("Could not find album with UUID: {album_id}")))?;
     Ok(FullAlbumMetadata {
         album_name: album.name,
         artists: extract_minified_artists(&db, album.artists).await?,
-        tracks: extract_minified_tracks(&db, album.tracks).await?,
+        tracks: extract_minified_tracks(&db, album.tracks, user).await?,
         release_date: NaiveDateTime::from_timestamp_millis(album.release_date as i64).unwrap().and_utc(),
         genres: album.genres
     })
@@ -283,7 +283,7 @@ async fn extract_minified_albums(db: &AstralDatabase, albums: Vec<BsonId>) -> Re
     }).collect())
 }
 
-async fn extract_minified_tracks(db: &AstralDatabase, tracks: Vec<BsonId>) -> Res<Vec<MinifiedTrackMetadata>> {
+async fn extract_minified_tracks(db: &AstralDatabase, tracks: Vec<BsonId>, user: &UserAccount) -> Res<Vec<MinifiedTrackMetadata>> {
     let all = db.tracks_metadata.find(doc! { "track_id": { "$in": &tracks } }, None).await?
         .map(|it| it.unwrap()).collect::<Vec<TrackMetadata>>().await;
     Ok(all.into_iter().map(|each| MinifiedTrackMetadata {
@@ -296,5 +296,6 @@ async fn extract_minified_tracks(db: &AstralDatabase, tracks: Vec<BsonId>) -> Re
         number: each.number,
         disc_number: each.disc_number,
         is_explicit: each.is_explicit,
+        is_loved: user.loved_tracks.contains(&each.track_id),
     }).collect())
 }
