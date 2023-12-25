@@ -159,7 +159,7 @@ const PreuploadedCard = ({promise}: { promise: Promise<MusixmatchTrackData> }) =
 }
 
 const LoadingCard = () => {
-    return <div className={"rounded-lg bg-[#2d2d2d63] w-[15em] h-[20em]"}>
+    return <div className={"rounded-lg bg-[#2d2d2d63] hover:bg-[#3d3d3d63] w-[14em] h-[22.5em]"}>
 
     </div>
 }
