@@ -73,6 +73,8 @@ pub async fn start_axum() -> anyhow::Result<()> {
         .route("/upload/album/:uuid/patch", patch(upload::patch_album_metadata))
         .route("/upload/artist/:uuid/patch", patch(upload::patch_artist_metadata))
         .route("/upload/cover/:uuid", post(upload::change_cover))
+        .route("/upload/track/:uuid/delete", post(upload::delete_track))
+        .route("/upload/album/:uuid/delete", post(upload::delete_album))
 
         // streaming
         .route("/stream/:uuid", get(stream::stream_track))

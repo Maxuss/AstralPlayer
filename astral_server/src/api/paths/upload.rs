@@ -160,6 +160,120 @@ pub async fn guess_metadata(
     }))
 }
 
+/// Completely deletes an album and all tracks in it
+#[utoipa::path(
+    patch,
+    path = "/upload/album/{uuid}/delete",
+    responses(
+        (status = 400, response = AstralError),
+        (status = 200, body = (), description = "Successfully deleted album")
+    ),
+    params(
+        ("uuid" = Uuid, Path, description = "UUID of the album to delete"),
+    ),
+    tag = "upload"
+)]
+pub async fn delete_album(
+    State(AppState { db, .. }): State<AppState>,
+    Path(album_id): Path<Uuid>,
+    AuthenticatedUser(user): AuthenticatedUser,
+) -> Res<()> {
+    if !user.permissions.contains(&UserPermission::ChangeMetadata) {
+        return Err(AstralError::Unauthorized(String::from("You are not authorized to change metadata.")))
+    }
+
+    let id = BsonId::from_uuid_1(album_id);
+    let album = db.albums_metadata.find_one_and_delete(doc! { "album_id": id }, None).await?;
+
+    let files_dir = std::path::Path::new("astral_tracks");
+    let transcoded_low_dir = files_dir.join("transcoded_low");
+    let transcoded_med_dir = files_dir.join("transcoded_medium");
+    if let Some(album) = album {
+        let found_art = db.gridfs_album_arts.find(doc! { "filename": id.to_string() }, None).await?.next().await.unwrap()?;
+        db.gridfs_album_arts.delete(found_art.id).await?;
+        db.artists_metadata.update_many(doc! { "artist_id": {"$in": &album.artists} }, doc! {
+            "$pull": {
+                "albums": &id,
+                "tracks": { "$in": &album.tracks }
+            }
+        }, None).await?;
+        for track_id in &album.tracks {
+            db.tracks_metadata.delete_one(doc!{ "track_id": &track_id }, None).await?;
+            db.lyrics.delete_one(doc! {"track_id": &track_id}, None).await?;
+            let filename = format!("{track_id}.bin");
+            tokio::fs::remove_file(&files_dir.join(&filename)).await?;
+            let low = transcoded_low_dir.join(&filename);
+            if low.exists() {
+                tokio::fs::remove_file(&low).await?;
+            }
+            let medium = transcoded_med_dir.join(&filename);
+            if medium.exists() {
+                tokio::fs::remove_file(&medium).await?;
+            }
+        }
+        return Ok(())
+    } else {
+        return Ok(())
+    }
+}
+
+/// Completely deletes a single track
+#[utoipa::path(
+    patch,
+    path = "/upload/track/{uuid}/delete",
+    responses(
+        (status = 400, response = AstralError),
+        (status = 200, body = (), description = "Successfully deleted track")
+    ),
+    params(
+        ("uuid" = Uuid, Path, description = "UUID of the track to delete"),
+    ),
+    tag = "upload"
+)]
+pub async fn delete_track(
+    State(AppState { db, .. }): State<AppState>,
+    Path(track_id): Path<Uuid>,
+    AuthenticatedUser(user): AuthenticatedUser,
+) -> Res<()> {
+    if !user.permissions.contains(&UserPermission::ChangeMetadata) {
+        return Err(AstralError::Unauthorized(String::from("You are not authorized to change metadata.")))
+    }
+
+    let id = BsonId::from_uuid_1(track_id);
+    let track = db.tracks_metadata.find_one_and_delete(doc! { "track_id": id }, None).await?;
+
+    let files_dir = std::path::Path::new("astral_tracks");
+    let transcoded_low_dir = files_dir.join("transcoded_low");
+    let transcoded_med_dir = files_dir.join("transcoded_medium");
+    if let Some(track) = track {
+        db.tracks_metadata.delete_one(doc!{ "track_id": &id }, None).await?;
+        db.lyrics.delete_one(doc! {"track_id": &id}, None).await?;
+        let filename = format!("{track_id}.bin");
+        tokio::fs::remove_file(&files_dir.join(&filename)).await?;
+        let low = transcoded_low_dir.join(&filename);
+        if low.exists() {
+            tokio::fs::remove_file(&low).await?;
+        }
+        let medium = transcoded_med_dir.join(&filename);
+        if medium.exists() {
+            tokio::fs::remove_file(&medium).await?;
+        }
+        db.artists_metadata.update_many(doc! { "artist_id": {"$in": &track.artists} }, doc! {
+            "$pull": {
+                "tracks": &id
+            }
+        }, None).await?;
+        db.albums_metadata.update_many(doc! { "album_id": {"$in": &track.albums} }, doc! {
+            "$pull": {
+                "tracks": &id
+            }
+        }, None).await?;
+        return Ok(())
+    } else {
+        return Ok(())
+    }
+}
+
 /// Updates metadata for a single track
 #[utoipa::path(
     patch,
